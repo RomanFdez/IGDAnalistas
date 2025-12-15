@@ -1,0 +1,417 @@
+import React, { useState } from 'react';
+import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
+import {
+    Box, Typography, Paper, Table, TableBody, TableCell,
+    TableContainer, TableHead, TableRow, Checkbox, IconButton, Switch,
+    Tabs, Tab, Grid, TextField, Button, Divider, Chip, FormControlLabel, Tooltip
+} from '@mui/material';
+import { Save, PersonAdd, School, VpnKey, DeleteOutline } from '@mui/icons-material';
+
+function TaskTypesTab() {
+    const { taskTypes, updateTaskType, deleteTaskType } = useData();
+
+    const handleColorChange = (id, newColor) => {
+        updateTaskType(id, { color: newColor });
+    };
+
+    const handleStructuralChange = (id, isStructural) => {
+        updateTaskType(id, { structural: isStructural });
+    };
+
+    const handleDeleteType = (id) => {
+        if (window.confirm('¿Estás seguro de que quieres eliminar este tipo de tarea?')) {
+            try {
+                deleteTaskType(id);
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+    };
+
+    return (
+        <TableContainer component={Paper} variant="outlined" elevation={0}>
+            <Table>
+                <TableHead sx={{ bgcolor: 'background.default' }}>
+                    <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Etiqueta</TableCell>
+                        <TableCell>Color de Fondo</TableCell>
+                        <TableCell align="center">Es Estructural</TableCell>
+                        <TableCell width={50}></TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {taskTypes.map(type => (
+                        <TableRow key={type.id} hover>
+                            <TableCell>{type.id}</TableCell>
+                            <TableCell>
+                                <TextField
+                                    variant="outlined"
+                                    size="small"
+                                    value={type.label}
+                                    onChange={(e) => updateTaskType(type.id, { label: e.target.value })}
+                                    sx={{ fontWeight: 'medium', bgcolor: 'white' }}
+                                    fullWidth
+                                />
+                            </TableCell>
+                            <TableCell>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Tooltip title="Clic para cambiar color">
+                                        <Box sx={{ position: 'relative', width: 32, height: 32, cursor: 'pointer', transition: 'transform 0.1s', '&:hover': { transform: 'scale(1.1)' } }}>
+                                            <Box
+                                                sx={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    borderRadius: 2,
+                                                    bgcolor: type.color,
+                                                    border: '1px solid rgba(0,0,0,0.1)',
+                                                    boxShadow: 1
+                                                }}
+                                            />
+                                            <input
+                                                type="color"
+                                                value={type.color || '#ffffff'}
+                                                onChange={(e) => handleColorChange(type.id, e.target.value)}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    opacity: 0,
+                                                    cursor: 'pointer',
+                                                    border: 'none',
+                                                    padding: 0
+                                                }}
+                                            />
+                                        </Box>
+                                    </Tooltip>
+                                </Box>
+                            </TableCell>
+                            <TableCell align="center">
+                                <Switch
+                                    checked={!!type.structural}
+                                    onChange={(e) => handleStructuralChange(type.id, e.target.checked)}
+                                    color="primary"
+                                />
+                            </TableCell>
+                            <TableCell>
+                                <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => handleDeleteType(type.id)}
+                                    title="Eliminar Tipo de Tarea"
+                                >
+                                    <DeleteOutline />
+                                </IconButton>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </TableContainer>
+    );
+}
+
+function UsersTab() {
+    const { USERS, addUser, toggleUserStatus, updateUser } = useAuth();
+    const [newName, setNewName] = useState('');
+    const [newSurname, setNewSurname] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [isApprover, setIsApprover] = useState(false);
+
+    // Edit State
+    const [editUser, setEditUser] = useState(null);
+    const [editName, setEditName] = useState('');
+    const [editSurname, setEditSurname] = useState('');
+    const [editPassword, setEditPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+
+    const handleAddUser = (e) => {
+        e.preventDefault();
+        if (newName.trim() && newSurname.trim() && newPassword.trim()) {
+            addUser(newName, newSurname, newPassword, isApprover);
+            setNewName('');
+            setNewSurname('');
+            setNewPassword('');
+            setIsApprover(false);
+        }
+    };
+
+    const handleToggleApprover = (userId, currentRoles) => {
+        let newRoles = [...currentRoles];
+        const isApprover = newRoles.includes('APPROVER');
+        const user = USERS.find(u => u.id === userId);
+
+        if (isApprover) {
+            // Check: Ensure we don't remove the last ACTIVE approver
+            if (user && user.active) {
+                const activeApprovers = USERS.filter(u => u.active && u.roles.includes('APPROVER')).length;
+                if (activeApprovers <= 1) {
+                    alert('No se puede quitar el rol. Debe haber al menos un Aprobador activo en el sistema.');
+                    return;
+                }
+            }
+            // General safety: Ensure we don't remove the absolute last approver (even if everyone is inactive, though unlikely)
+            const totalApprovers = USERS.filter(u => u.roles.includes('APPROVER')).length;
+            if (totalApprovers <= 1) {
+                alert('Debe haber al menos un usuario con rol de Aprobador.');
+                return;
+            }
+
+            newRoles = newRoles.filter(r => r !== 'APPROVER');
+        } else {
+            // Adding APPROVER role
+            newRoles.push('APPROVER');
+        }
+        updateUser(userId, { roles: newRoles });
+    };
+
+    const handleToggleStatus = (userId, isActive, roles) => {
+        if (isActive) {
+            // We are attempting to DEACTIVATE the user
+            if (roles.includes('APPROVER')) {
+                const activeApprovers = USERS.filter(u => u.active && u.roles.includes('APPROVER')).length;
+                if (activeApprovers <= 1) {
+                    alert('No se puede desactivar. Este es el único Aprobador activo en el sistema.');
+                    return;
+                }
+            }
+        }
+        toggleUserStatus(userId);
+    };
+
+    const openEditDialog = (user) => {
+        setEditUser(user);
+        const parts = user.name.split(' ');
+        setEditName(parts[0] || '');
+        setEditSurname(parts.slice(1).join(' ') || '');
+        setEditPassword('');
+        setConfirmPassword('');
+    };
+
+    const handleSaveEdit = () => {
+        if (!editUser) return;
+
+        const updates = {};
+
+        // Name Update
+        if (editName.trim()) {
+            updates.name = `${editName.trim()} ${editSurname.trim()}`;
+        }
+
+        // Password Update
+        if (editPassword) {
+            if (editPassword !== confirmPassword) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+            updates.password = editPassword;
+        }
+
+        if (Object.keys(updates).length > 0) {
+            updateUser(editUser.id, updates);
+            setEditUser(null);
+        }
+    };
+
+    return (
+        <Grid container spacing={4}>
+            {/* Formulario Alta */}
+            <Grid item xs={12} md={4}>
+                <Paper variant="outlined" sx={{ p: 3 }}>
+                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <PersonAdd fontSize="small" /> Alta de Usuario
+                    </Typography>
+                    <Divider sx={{ my: 2 }} />
+                    <form onSubmit={handleAddUser}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <TextField
+                                label="Nombre"
+                                value={newName}
+                                onChange={e => setNewName(e.target.value)}
+                                size="small"
+                                required
+                                fullWidth
+                            />
+                            <TextField
+                                label="Apellidos"
+                                value={newSurname}
+                                onChange={e => setNewSurname(e.target.value)}
+                                size="small"
+                                required
+                                fullWidth
+                            />
+                            <TextField
+                                label="Contraseña"
+                                value={newPassword}
+                                onChange={e => setNewPassword(e.target.value)}
+                                size="small"
+                                required
+                                fullWidth
+                                type="password"
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={isApprover}
+                                        onChange={e => setIsApprover(e.target.checked)}
+                                    />
+                                }
+                                label="Es Aprobador"
+                            />
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                disabled={!newName || !newSurname || !newPassword}
+                            >
+                                Crear Usuario
+                            </Button>
+                        </Box>
+                    </form>
+                </Paper>
+            </Grid>
+
+            {/* Listado Usuarios */}
+            <Grid item xs={12} md={8}>
+                <Paper variant="outlined">
+                    <Table size="small">
+                        <TableHead sx={{ bgcolor: 'background.default' }}>
+                            <TableRow>
+                                <TableCell>Usuario</TableCell>
+                                <TableCell>Roles</TableCell>
+                                <TableCell>Estado</TableCell>
+                                <TableCell width={50}></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {USERS.map(u => (
+                                <TableRow key={u.id}>
+                                    <TableCell>
+                                        <Typography variant="body2" fontWeight="medium">{u.name}</Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            {/* <Chip label="ANALYST" size="small" color="default" variant="outlined" /> Redundant */}
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        size="small"
+                                                        checked={u.roles.includes('APPROVER')}
+                                                        onChange={() => handleToggleApprover(u.id, u.roles)}
+                                                    />
+                                                }
+                                                label={<Typography variant="caption">Aprobador</Typography>}
+                                            />
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Switch
+                                            checked={u.active}
+                                            onChange={() => handleToggleStatus(u.id, u.active, u.roles)}
+                                            color="success"
+                                            size="small"
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button size="small" onClick={() => openEditDialog(u)}>
+                                            Editar
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </Paper>
+            </Grid>
+
+            {/* Edit User Dialog */}
+            {editUser && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+                }}>
+                    <Paper sx={{ p: 4, minWidth: 350, maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Typography variant="h6">Editar Usuario</Typography>
+                        <Divider />
+
+                        <Typography variant="subtitle2" color="primary">Datos Personales</Typography>
+                        <TextField
+                            label="Nombre"
+                            value={editName}
+                            onChange={e => setEditName(e.target.value)}
+                            fullWidth
+                            size="small"
+                        />
+                        <TextField
+                            label="Apellidos"
+                            value={editSurname}
+                            onChange={e => setEditSurname(e.target.value)}
+                            fullWidth
+                            size="small"
+                        />
+
+                        <Typography variant="subtitle2" color="primary" sx={{ mt: 1 }}>Cambiar Contraseña (Opcional)</Typography>
+                        <TextField
+                            label="Nueva Contraseña"
+                            type="password"
+                            value={editPassword}
+                            onChange={e => setEditPassword(e.target.value)}
+                            fullWidth
+                            size="small"
+                        />
+                        <TextField
+                            label="Confirmar Contraseña"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={e => setConfirmPassword(e.target.value)}
+                            fullWidth
+                            size="small"
+                            error={!!editPassword && editPassword !== confirmPassword}
+                            helperText={!!editPassword && editPassword !== confirmPassword ? "Las contraseñas no coinciden" : ""}
+                        />
+
+                        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
+                            <Button onClick={() => setEditUser(null)} color="inherit">Cancelar</Button>
+                            <Button
+                                variant="contained"
+                                onClick={handleSaveEdit}
+                                disabled={!!editPassword && editPassword !== confirmPassword}
+                            >
+                                Guardar Cambios
+                            </Button>
+                        </Box>
+                    </Paper>
+                </div>
+            )}
+        </Grid>
+    );
+}
+
+export default function Admin() {
+    const [tabIndex, setTabIndex] = useState(0);
+
+    const handleTabChange = (event, newValue) => {
+        setTabIndex(newValue);
+    };
+
+    return (
+        <Box>
+            <Typography variant="h5" color="text.primary" sx={{ mb: 1 }}>Administración</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                Panel de control global de la aplicación.
+            </Typography>
+
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                <Tabs value={tabIndex} onChange={handleTabChange}>
+                    <Tab label="Tipos de Tarea" />
+                    <Tab label="Usuarios" />
+                </Tabs>
+            </Box>
+
+            {tabIndex === 0 && <TaskTypesTab />}
+            {tabIndex === 1 && <UsersTab />}
+        </Box>
+    );
+}
