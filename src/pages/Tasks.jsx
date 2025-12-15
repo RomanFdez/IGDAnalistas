@@ -10,7 +10,7 @@ import {
   Tooltip, Dialog
 } from '@mui/material';
 import {
-  Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock
+  Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock, Edit
 } from '@mui/icons-material';
 import TaskFormDialog from '../components/TaskFormDialog';
 import { getYear, getMonth, getISOWeek, setISOWeek, startOfYear, eachWeekOfInterval, endOfMonth, startOfMonth, format } from 'date-fns';
@@ -23,6 +23,7 @@ export default function Tasks() {
 
   const [open, setOpen] = useState(false);
   const [taskDescription, setTaskDescription] = useState(null);
+  const [editingTask, setEditingTask] = useState(null); // Task being edited
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -175,7 +176,7 @@ export default function Tasks() {
 
       <Grid container spacing={3}>
         {/* LEFT COLUMN: TASKS TABLE */}
-        <Grid item xs={12} md={8}>
+        <Grid item xs={7} md={8}>
           <Paper elevation={0} variant="outlined" sx={{ mb: 2, p: 2 }}>
             <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
               <TextField
@@ -220,18 +221,22 @@ export default function Tasks() {
                         Nombre
                       </TableSortLabel>
                     </TableCell>
+                    <TableCell align="center">UTES</TableCell>
                     <TableCell align="center">Estado</TableCell>
                     <TableCell align="right">Acciones</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {visibleTasks.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} align="center" sx={{ py: 4, color: 'text.secondary' }}>No se encontraron tareas.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>No se encontraron tareas.</TableCell></TableRow>
                   ) : visibleTasks.map(task => (
                     <TableRow key={task.id} hover>
                       <TableCell component="th" scope="row">{task.code}</TableCell>
                       <TableCell>
                         <Typography variant="body2">{task.name}</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body2">{task.utes > 0 ? task.utes : '-'}</Typography>
                       </TableCell>
                       <TableCell align="center">
                         <Chip
@@ -250,6 +255,16 @@ export default function Tasks() {
                             sx={{ color: 'text.secondary' }}
                           >
                             <InfoOutlined />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => {
+                              setEditingTask(task);
+                              setOpen(true);
+                            }}
+                            size="small"
+                            color="primary"
+                          >
+                            <Edit fontSize="small" />
                           </IconButton>
                           {task.permanent ? (
                             <Tooltip title="Tarea Permanente">
@@ -287,7 +302,7 @@ export default function Tasks() {
         </Grid>
 
         {/* RIGHT COLUMN: SUMMARY WIDGET */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={5} md={4}>
           <Card variant="outlined">
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -396,7 +411,11 @@ export default function Tasks() {
       {/* Dialog for New Task */}
       <TaskFormDialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          setEditingTask(null); // Clear editing state on close
+        }}
+        taskToEdit={editingTask}
       />
     </Box>
   );

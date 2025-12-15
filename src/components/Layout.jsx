@@ -6,7 +6,7 @@ import {
     ListItemIcon, ListItemText, IconButton, Avatar, Menu, MenuItem, Divider
 } from '@mui/material';
 import {
-    Logout, Dashboard as DashboardIcon, CheckCircle, Assignment, Menu as MenuIcon, People
+    Logout, Dashboard as DashboardIcon, CheckCircle, Assignment, Menu as MenuIcon, People, BarChart
 } from '@mui/icons-material';
 
 const drawerWidth = 260;
@@ -43,6 +43,7 @@ export default function Layout({ children }) {
 
     if (user?.roles.includes('APPROVER')) {
         navItems.push({ path: '/approvals', label: 'Aprobaciones', icon: <CheckCircle /> });
+        navItems.push({ path: '/statistics', label: 'Estadísticas', icon: <BarChart /> });
         navItems.push({ path: '/admin', label: 'Administración', icon: <Assignment /> });
     }
 
@@ -97,7 +98,7 @@ export default function Layout({ children }) {
                     boxShadow: 1
                 }}
             >
-                <Toolbar>
+                <Toolbar variant="dense" sx={{ minHeight: '32px !important' }}>
                     <IconButton
                         color="inherit"
                         edge="start"
@@ -110,15 +111,16 @@ export default function Layout({ children }) {
                     <Box sx={{ flexGrow: 1 }} />
 
                     <Box sx={{ display: 'flex', items: 'center' }}>
-                        <Typography variant="subtitle2" sx={{ mr: 2, display: { xs: 'none', md: 'block' }, lineHeight: '40px' }}>
+                        <Typography variant="subtitle2" sx={{ mr: 2, display: { xs: 'none', md: 'block' }, lineHeight: '32px' }}>
                             {user?.name}
                         </Typography>
                         <IconButton
-                            size="large"
+                            size="small"
                             onClick={handleMenu}
                             color="inherit"
+                            sx={{ p: 0.5 }}
                         >
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                            <Avatar sx={{ width: 24, height: 24, bgcolor: 'primary.main', fontSize: '0.875rem' }}>
                                 {user?.name.charAt(0)}
                             </Avatar>
                         </IconButton>
@@ -178,7 +180,7 @@ export default function Layout({ children }) {
                 component="main"
                 sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` }, minHeight: '100vh', bgcolor: 'background.default' }}
             >
-                <Toolbar /> {/* Spacer for fixed AppBar */}
+                <Toolbar variant="dense" sx={{ minHeight: '32px !important' }} /> {/* Spacer for fixed AppBar */}
                 {children}
             </Box>
         </Box>

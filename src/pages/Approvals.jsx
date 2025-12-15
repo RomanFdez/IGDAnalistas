@@ -100,18 +100,25 @@ export default function Approvals() {
     const userSummaries = usersWithData.map(u => {
         const userImps = weekImputations.filter(i => i.userId === u.id);
 
-        // Calculate Totals
-        let workedAndJira = 0;
+        // Calculate Totals based on 'computesInWeek'
+        let computable = 0;
         let other = 0;
+
         userImps.forEach(i => {
             const total = Object.values(i.hours).reduce((a, b) => a + b, 0);
-            if (i.type === 'TRABAJADO' || i.type === 'JIRA') {
-                workedAndJira += total;
+            const typeConfig = taskTypes.find(t => t.id === i.type);
+
+            // Default to true if property is missing (for backward compatibility), 
+            // unless explicitly false.
+            const isComputable = typeConfig?.computesInWeek !== false;
+
+            if (isComputable) {
+                computable += total;
             } else {
                 other += total;
             }
         });
-        const totalHours = workedAndJira + other;
+        const totalHours = computable + other;
 
         // Enhance & Filter
         let enhancedImps = userImps.map(imp => {
@@ -166,7 +173,7 @@ export default function Approvals() {
             return a.task?.code.localeCompare(b.task?.code || '');
         });
 
-        return { user: u, totalHours, workedAndJira, other, imputations: enhancedImps };
+        return { user: u, totalHours, computable, other, imputations: enhancedImps };
     });
 
     const handleExportExcel = () => {
@@ -325,16 +332,20 @@ export default function Approvals() {
                                         </Box>
                                     </Box>
                                     <Box sx={{ textAlign: 'right' }}>
-                                        <Chip
-                                            label={`${summary.workedAndJira}h`}
-                                            color={summary.workedAndJira >= 40 ? 'success' : 'warning'}
-                                            size="small"
-                                            sx={{ fontWeight: 'bold' }}
-                                        />
+                                        <Tooltip title="Horas Computables (Trabajado + Jira + etc.)">
+                                            <Chip
+                                                label={`${summary.computable}h`}
+                                                color={summary.computable >= 40 ? 'success' : 'warning'}
+                                                size="small"
+                                                sx={{ fontWeight: 'bold' }}
+                                            />
+                                        </Tooltip>
                                         {summary.other > 0 && (
-                                            <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
-                                                Otras: {summary.other}h
-                                            </Typography>
+                                            <Tooltip title="Otras Horas (No computan)">
+                                                <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                    Otras: {summary.other}h
+                                                </Typography>
+                                            </Tooltip>
                                         )}
                                     </Box>
                                 </Box>

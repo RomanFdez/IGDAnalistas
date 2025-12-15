@@ -5,11 +5,24 @@ import {
     DialogActions, TextField
 } from '@mui/material';
 
-export default function TaskFormDialog({ open, onClose, onTaskCreated }) {
-    const { addTask } = useData();
-    const [newCode, setNewCode] = useState('');
-    const [newName, setNewName] = useState('');
-    const [newDesc, setNewDesc] = useState('');
+export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdit }) {
+    const { addTask, updateTask } = useData();
+
+    // Initialize state with taskToEdit values if present, or defaults
+    const [newCode, setNewCode] = useState(taskToEdit?.code || '');
+    const [newName, setNewName] = useState(taskToEdit?.name || '');
+    const [newDesc, setNewDesc] = useState(taskToEdit?.description || '');
+    const [newUtes, setNewUtes] = useState(taskToEdit?.utes || '');
+
+    // Update state when taskToEdit changes or dialog opens
+    React.useEffect(() => {
+        if (open) {
+            setNewCode(taskToEdit?.code || '');
+            setNewName(taskToEdit?.name || '');
+            setNewDesc(taskToEdit?.description || '');
+            setNewUtes(taskToEdit?.utes || '');
+        }
+    }, [open, taskToEdit]);
 
     // State for validation errors
     const [codeError, setCodeError] = useState(false);
@@ -40,13 +53,27 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated }) {
             return; // Stop submission if there are errors
         }
 
-        // Create task (helper in DataContext assigns user)
-        addTask({ code: newCode, name: newName, description: newDesc });
+        if (taskToEdit) {
+            updateTask(taskToEdit.id, {
+                name: newName,
+                description: newDesc,
+                utes: newUtes ? Number(newUtes) : 0
+            });
+        } else {
+            // Create task (helper in DataContext assigns user)
+            addTask({
+                code: newCode,
+                name: newName,
+                description: newDesc,
+                utes: newUtes ? Number(newUtes) : 0
+            });
+        }
 
         // Reset form
         setNewCode('');
         setNewName('');
         setNewDesc('');
+        setNewUtes('');
 
         // Notify parent
         if (onTaskCreated) onTaskCreated();
@@ -57,11 +84,11 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated }) {
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
             <form onSubmit={handleSubmit}>
-                <DialogTitle>Nueva Tarea</DialogTitle>
+                <DialogTitle>{taskToEdit ? "Editar Tarea" : "Nueva Tarea"}</DialogTitle>
                 <DialogContent dividers>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
                         <TextField
-                            autoFocus
+                            autoFocus={!taskToEdit}
                             margin="dense"
                             label="Código Tarea"
                             fullWidth
@@ -69,10 +96,12 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated }) {
                             value={newCode}
                             onChange={(e) => setNewCode(e.target.value)}
                             required
+                            disabled={!!taskToEdit} // Disable editing of code
                             error={codeError}
                             helperText={codeError ? "El código es requerido" : ""}
                         />
                         <TextField
+                            autoFocus={!!taskToEdit}
                             margin="dense"
                             label="Nombre Tarea"
                             fullWidth
@@ -91,11 +120,20 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated }) {
                             rows={3}
                             fullWidth
                         />
+                        <TextField
+                            label="Número de UTES (Horas Presupuestadas)"
+                            type="number"
+                            value={newUtes}
+                            onChange={(e) => setNewUtes(e.target.value)}
+                            fullWidth
+                            InputProps={{ inputProps: { min: 0 } }}
+                            helperText="Opcional. Bolsa de horas total para la tarea."
+                        />
                     </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onClose} color="inherit">Cancelar</Button>
-                    <Button type="submit" variant="contained">Guardar</Button>
+                    <Button type="submit" variant="contained">{taskToEdit ? "Actualizar" : "Guardar"}</Button>
                 </DialogActions>
             </form>
         </Dialog>

@@ -28,185 +28,95 @@ export const DataProvider = ({ children }) => {
     // New dynamic state for Task Types
     const [taskTypes, setTaskTypes] = useState([]);
 
-    // Cargar datos iniciales
+    // Cargar datos iniciales desde API
     useEffect(() => {
-        let storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-        let storedImputations = JSON.parse(localStorage.getItem('imputations') || '[]');
-        const storedLocks = JSON.parse(localStorage.getItem('weekLocks') || '{}');
-        let storedTaskTypes = JSON.parse(localStorage.getItem('taskTypes') || '[]');
-
-        // Initialize Task Types if empty
-        if (storedTaskTypes.length === 0) {
-            storedTaskTypes = DEFAULT_TASK_TYPES;
-            localStorage.setItem('taskTypes', JSON.stringify(storedTaskTypes));
-        }
-
-        // --- SEED DATA LOGIC ---
-        // Ensuring test data exists for current week if missing
-
-        const now = new Date();
-        const currentWeekId = `${getYear(now)}-W${getISOWeek(now)}`;
-
-        // 1. Ensure Permanent/Structural Tasks Always Exist
-        const requiredTasks = [
-            {
-                id: 'T-EST-NOIMP',
-                code: 'Estructural',
-                name: 'No imputable',
-                description: 'Otro tipo de tareas no relacionadas con Hitos de Mapfre.',
-                active: true,
-                targetRoles: ['ANALYST'],
-                permanent: true
+        const fetchData = async () => {
+            try {
+                const res = await fetch('http://localhost:3001/api/initial-data');
+                if (res.ok) {
+                    const data = await res.json();
+                    setTaskTypes(data.taskTypes || []);
+                    setTasks(data.tasks || []);
+                    setImputations(data.imputations || []);
+                    setWeekLocks(data.weekLocks || {});
+                }
+            } catch (error) {
+                console.error("Error fetching initial data:", error);
             }
-        ];
-
-        let tasksUpdated = false;
-
-        // Cleanup: Remove legacy T-EST if present
-        if (storedTasks.some(t => t.id === 'T-EST')) {
-            storedTasks = storedTasks.filter(t => t.id !== 'T-EST');
-            tasksUpdated = true;
-        }
-        requiredTasks.forEach(reqTask => {
-            if (!storedTasks.find(t => t.id === reqTask.id)) {
-                storedTasks.push(reqTask);
-                tasksUpdated = true;
-            } else {
-                // Optional: Update definition if it changed (e.g. targetRoles added)
-                const existing = storedTasks.find(t => t.id === reqTask.id);
-                if (JSON.stringify(existing.targetRoles) !== JSON.stringify(reqTask.targetRoles)) {
-                    Object.assign(existing, reqTask);
-                    tasksUpdated = true;
-                }
-            }
-        });
-
-        // Initial seed for demo purposes (only if fresh)
-        const hasAnaData = storedImputations.some(i => i.weekId === currentWeekId && i.userId === 'u1');
-
-        if (!hasAnaData) {
-            console.log("Seeding initial data...");
-
-            const seedTasks = [
-                { id: 'T-ANA1', code: 'PROJ-001', name: 'Desarrollo Feature A', active: true, assignedUserIds: ['u1'] },
-                { id: 'T-ANA2', code: 'PROJ-002', name: 'Planificación Q4', active: true, assignedUserIds: ['u1'] },
-                { id: 'T-PED1', code: 'MGMT-001', name: 'Gestión y Recuperación', active: true, assignedUserIds: ['u2'] }
-            ];
-
-            seedTasks.forEach(st => {
-                if (!storedTasks.find(t => t.id === st.id)) {
-                    storedTasks.push(st);
-                    tasksUpdated = true;
-                }
-            });
-
-            // 2. Add Imputations
-
-            // Ana: 40h TRABAJADO, 3h PRE_IMPUTADO
-            const anaImps = [
-                {
-                    id: crypto.randomUUID(),
-                    weekId: currentWeekId,
-                    taskId: 'T-ANA1',
-                    userId: 'u1',
-                    hours: { mon: 8, tue: 8, wed: 8, thu: 8, fri: 8 }, // 40h
-                    type: 'TRABAJADO',
-                    seg: false,
-                    status: 'DRAFT'
-                },
-                {
-                    id: crypto.randomUUID(),
-                    weekId: currentWeekId,
-                    taskId: 'T-ANA2',
-                    userId: 'u1',
-                    hours: { mon: 3, tue: 0, wed: 0, thu: 0, fri: 0 }, // 3h
-                    type: 'PRE_IMPUTADO',
-                    seg: true,
-                    status: 'DRAFT'
-                }
-            ];
-
-            // Pedro: 15h RECUPERADO
-            const pedroImps = [
-                {
-                    id: crypto.randomUUID(),
-                    weekId: currentWeekId,
-                    taskId: 'T-PED1',
-                    userId: 'u2',
-                    hours: { mon: 8, tue: 7, wed: 0, thu: 0, fri: 0 }, // 15h
-                    type: 'RECUPERADO',
-                    seg: false,
-                    status: 'DRAFT'
-                }
-            ];
-
-            storedImputations = [...storedImputations, ...anaImps, ...pedroImps];
-
-            // Note: We used to save here, but better to save at end of effect or rely on state update
-        }
-
-        // If we updated storedTasks directly, save it back to LS immediately so state init picks it up
-        // actually, we are initializing state from storedTasks variable, so just need to setTasks.
-        // But to persist for next reload if we changed it in memory:
-        if (tasksUpdated) {
-            localStorage.setItem('tasks', JSON.stringify(storedTasks));
-        }
-
-        if (!hasAnaData) {
-            localStorage.setItem('imputations', JSON.stringify(storedImputations));
-        }
-
-        setTasks(storedTasks);
-        setImputations(storedImputations);
-        setWeekLocks(storedLocks);
-        setTaskTypes(storedTaskTypes);
+        };
+        fetchData();
+        // Remove manual seeding from here as backend should persist data
     }, []);
 
-    // Persistir cambios
-    useEffect(() => {
-        if (tasks.length > 0) localStorage.setItem('tasks', JSON.stringify(tasks));
-    }, [tasks]);
-
-    useEffect(() => {
-        if (imputations.length > 0) localStorage.setItem('imputations', JSON.stringify(imputations));
-    }, [imputations]);
-
-    useEffect(() => {
-        localStorage.setItem('weekLocks', JSON.stringify(weekLocks));
-    }, [weekLocks]);
-
-    useEffect(() => {
-        if (taskTypes.length > 0) localStorage.setItem('taskTypes', JSON.stringify(taskTypes));
-    }, [taskTypes]);
+    // Remove localStorage effects
 
     // --- ACTIONS ---
 
-    const addTask = (newTask) => {
-        setTasks(prev => [...prev, { ...newTask, id: crypto.randomUUID(), active: true, assignedUserIds: [user.id] }]);
+    const addTask = async (newTask) => {
+        const taskWithId = { ...newTask, id: crypto.randomUUID(), active: true, assignedUserIds: [user.id] };
+        // Optimistic UI
+        setTasks(prev => [...prev, taskWithId]);
+
+        try {
+            await fetch('http://localhost:3001/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(taskWithId)
+            });
+        } catch (error) {
+            console.error("Error creating task:", error);
+        }
     };
 
-    const updateTaskAssignee = (taskId, userId) => {
-        setTasks(prev => prev.map(t => {
-            if (t.id !== taskId) return t;
-            const currentAssignees = t.assignedUserIds || [];
-            if (!currentAssignees.includes(userId)) {
-                return { ...t, assignedUserIds: [...currentAssignees, userId] };
-            }
-            return t;
-        }));
+    const updateTaskAssignee = async (taskId, userId) => {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        const currentAssignees = task.assignedUserIds || [];
+        if (!currentAssignees.includes(userId)) {
+            const newAssignees = [...currentAssignees, userId];
+            // Optimistic
+            setTasks(prev => prev.map(t => t.id === taskId ? { ...t, assignedUserIds: newAssignees } : t));
+
+            await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assignedUserIds: newAssignees })
+            });
+        }
     }
 
-    const toggleTaskStatus = (taskId) => {
-        setTasks(prev => prev.map(t => {
-            if (t.id === taskId) {
-                if (t.permanent) return t; // Cannot toggle permanent tasks
-                return { ...t, active: !t.active };
-            }
-            return t;
-        }));
+    const toggleTaskStatus = async (taskId) => {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task || task.permanent) return;
+
+        const newActive = !task.active;
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, active: newActive } : t));
+
+        await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ active: newActive })
+        });
     };
 
-    const addOrUpdateImputation = (imputation) => {
+    const updateTask = async (taskId, updates) => {
+        // Optimistic
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t));
+
+        try {
+            await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+        } catch (error) {
+            console.error("Error updating task:", error);
+        }
+    };
+
+    const addOrUpdateImputation = async (imputation) => {
+        // Optimistic
         setImputations(prev => {
             const existingIndex = prev.findIndex(i => i.id === imputation.id);
             if (existingIndex >= 0) {
@@ -214,34 +124,94 @@ export const DataProvider = ({ children }) => {
                 newImps[existingIndex] = imputation;
                 return newImps;
             }
-            return [...prev, { ...imputation, id: crypto.randomUUID() }];
+            return [...prev, { ...imputation, id: imputation.id || crypto.randomUUID() }];
         });
+
+        try {
+            const payload = { ...imputation, id: imputation.id || crypto.randomUUID() };
+            await fetch('http://localhost:3001/api/imputations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (error) {
+            console.error("Error saving imputation:", error);
+        }
     };
 
-    const deleteImputation = (id) => {
+    const deleteImputation = async (id) => {
         setImputations(prev => prev.filter(i => i.id !== id));
+        try {
+            await fetch(`http://localhost:3001/api/imputations/${id}`, { method: 'DELETE' });
+        } catch (error) {
+            console.error("Error deleting imputation:", error);
+        }
     };
 
-    const toggleWeekLock = (weekId) => {
-        setWeekLocks(prev => {
-            const newLocks = { ...prev, [weekId]: !prev[weekId] };
-            return newLocks;
-        });
+    const toggleWeekLock = async (weekId) => {
+        const isLocked = !weekLocks[weekId];
+        setWeekLocks(prev => ({ ...prev, [weekId]: isLocked }));
+
+        try {
+            await fetch('http://localhost:3001/api/locks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ weekId, isLocked })
+            });
+        } catch (error) {
+            console.error("Error locking week:", error);
+        }
     };
 
     const isWeekLocked = (weekId) => !!weekLocks[weekId];
 
-    const updateTaskType = (typeId, changes) => {
+    const updateTaskType = async (typeId, changes) => {
         setTaskTypes(prev => prev.map(t => t.id === typeId ? { ...t, ...changes } : t));
+
+        try {
+            await fetch(`http://localhost:3001/api/task-types/${typeId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(changes)
+            });
+        } catch (error) {
+            console.error("Error updating Task Type:", error);
+        }
     };
 
-    const deleteTaskType = (typeId) => {
+    const addTaskType = async (newType) => {
+        // Optimistic
+        setTaskTypes(prev => [...prev, newType]);
+
+        try {
+            await fetch('http://localhost:3001/api/task-types', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newType)
+            });
+        } catch (error) {
+            console.error("Error creating Task Type:", error);
+        }
+    };
+
+    const deleteTaskType = async (typeId) => {
         // Validation: Check if used in imputations
         const isUsed = imputations.some(i => i.type === typeId);
         if (isUsed) {
             throw new Error(`No se puede eliminar: El tipo de tarea está en uso en ${imputations.filter(i => i.type === typeId).length} imputaciones.`);
         }
-        setTaskTypes(prev => prev.filter(t => t.id !== typeId));
+        setTaskTypes(prev => prev.filter(t => t.id !== typeId)); // Optimistic
+
+        try {
+            const res = await fetch(`http://localhost:3001/api/task-types/${typeId}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const err = await res.json();
+                // Revert or alert? Warning user.
+                alert("Error borrando en servidor: " + err.message);
+            }
+        } catch (error) {
+            console.error("Error deleting Task Type:", error);
+        }
     };
 
     // Getters helpers
@@ -284,8 +254,8 @@ export const DataProvider = ({ children }) => {
             addOrUpdateImputation, deleteImputation,
             toggleWeekLock, isWeekLocked,
             getTasksForUser, getAllTasks,
-            getTasksForUser, getAllTasks,
-            updateTaskType, deleteTaskType
+            updateTask,
+            updateTaskType, deleteTaskType, addTaskType
         }}>
             {children}
         </DataContext.Provider>

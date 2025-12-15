@@ -18,13 +18,24 @@ export default function Login() {
         }
     }, [USERS, selectedId]);
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         if (!selectedId || !password) return;
 
-        const success = login(selectedId, password);
-        if (success) {
-            navigate('/dashboard');
+        // The API/AuthContext now expects the 'username' (name property) for the API call 
+        // OR the AuthContext handles the lookup? 
+        // Let's modify handleLogin to find the user object and pass the name if needed, 
+        // OR rely on AuthContext to do the right thing. 
+        // Looking at AuthContext changes: api/login expects { username, password }.
+        // If I pass ID to AuthContext.login, it needs to be adapted.
+
+        // Let's fix this here: Get the name from the selected ID.
+        const userObj = USERS.find(u => u.id === selectedId);
+        if (userObj) {
+            const success = await login(userObj.name, password); // Pass Name as Username
+            if (success) {
+                navigate('/');
+            }
         }
     };
 

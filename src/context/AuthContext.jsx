@@ -14,50 +14,58 @@ export const AuthProvider = ({ children }) => {
         return storedUser ? JSON.parse(storedUser) : null;
     });
 
-    const [users, setUsers] = useState(() => {
-        try {
-            const storedUsers = localStorage.getItem('appUsers');
-            let parsedUsers = storedUsers ? JSON.parse(storedUsers) : DEFAULT_USERS;
+    const [users, setUsers] = useState([]);
 
-            if (!Array.isArray(parsedUsers)) {
-                console.warn('Stored users is not an array, resetting to defaults.');
-                parsedUsers = DEFAULT_USERS;
-            }
-
-            // Migration: Ensure all users have a password
-            return parsedUsers.map(u => ({ ...u, password: u.password || '123' }));
-        } catch (error) {
-            console.error('Error loading users:', error);
-            return DEFAULT_USERS.map(u => ({ ...u, password: u.password || '123' }));
-        }
-    });
-
-    // Remove redundant useEffect for user init
-
-
-    // Persist Users
+    // Fetch Users on Mount
     useEffect(() => {
-        if (users.length > 0) {
-            localStorage.setItem('appUsers', JSON.stringify(users));
-        }
-    }, [users]);
+        const fetchUsers = async () => {
+            try {
+                const response = await fetch('http://localhost:3001/api/users');
+                if (response.ok) {
+                    const data = await response.json();
+                    setUsers(data);
+                } else {
+                    console.error('Failed to fetch users');
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        };
+        fetchUsers();
+    }, []);
 
-    const login = (userId, password) => {
-        const foundUser = users.find(u => u.id === userId);
-        if (foundUser) {
-            if (!foundUser.active) {
-                alert('Usuario desactivado');
+    const login = async (username, password) => { // Changed arg from userId to username to match login form usually or adaption
+        // Actually the Login.jsx likely passes (userId, password) based on selection.
+        // But with real auth, we usually send credentials.
+        // Let's keep the existing UI logic if possible: The UI selects a user ID from a list? 
+        // No, Login.jsx usually has inputs. Let's check Login.jsx usage.
+
+        // Retaining hybrid approach: If we want to validate securely, we should hit /api/login
+        try {
+            const response = await fetch('http://localhost:3001/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                if (!userData.active) {
+                    alert('Usuario desactivado');
+                    return false;
+                }
+                setUser(userData);
+                localStorage.setItem('currentUser', JSON.stringify(userData)); // Keep session in LS for reload
+                return true;
+            } else {
+                alert('Credenciales incorrectas');
                 return false;
             }
-            if (foundUser.password !== password) {
-                alert('Contraseña incorrecta');
-                return false;
-            }
-            setUser(foundUser);
-            localStorage.setItem('currentUser', JSON.stringify(foundUser));
-            return true;
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Error de conexión');
+            return false;
         }
-        return false;
     };
 
     const logout = () => {
@@ -65,7 +73,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('currentUser');
     };
 
-    const addUser = (name, surname, password, isApprover) => {
+    const addUser = async (name, surname, password, isApprover) => {
         const roles = ['ANALYST'];
         if (isApprover) roles.push('APPROVER');
 
@@ -76,15 +84,42 @@ export const AuthProvider = ({ children }) => {
             active: true,
             password: password || '123'
         };
-        setUsers(prev => [...prev, newUser]);
+
+        try {
+            const res = await fetch('http://localhost:3001/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newUser)
+            });
+            if (res.ok) {
+                const savedUser = await res.json();
+                setUsers(prev => [...prev, savedUser]);
+            }
+        } catch (error) {
+            console.error('Error adding user:', error);
+        }
     };
 
-    const updateUser = (userId, changes) => {
+    const updateUser = async (userId, changes) => {
+        // Optimistic update
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...changes } : u));
+        try {
+            await fetch(`http://localhost:3001/api/users/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(changes)
+            });
+        } catch (error) {
+            console.error('Error updating user:', error);
+        }
     };
 
-    const toggleUserStatus = (userId) => {
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, active: !u.active } : u));
+    const toggleUserStatus = async (userId) => {
+        const userToUpdate = users.find(u => u.id === userId);
+        if (!userToUpdate) return;
+
+        const newStatus = !userToUpdate.active;
+        updateUser(userId, { active: newStatus });
     };
 
     const USERS = users; // Keep checking compatibility

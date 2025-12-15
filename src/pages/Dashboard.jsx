@@ -167,8 +167,11 @@ export default function Dashboard() {
                         <Typography variant="h6" sx={{ textTransform: 'capitalize', fontWeight: 'bold' }}>
                             {format(currentWeekStart, 'MMMM yyyy', { locale: es })}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary" display="block">
                             Semana {getISOWeek(currentWeekStart)}
+                        </Typography>
+                        <Typography variant="caption" color="primary" fontWeight="bold">
+                            {format(currentWeekStart, 'd MMM', { locale: es })} - {format(addDays(currentWeekStart, 4), 'd MMM', { locale: es })}
                         </Typography>
                     </Box>
                     <IconButton onClick={handleNextWeek} size="small" sx={{ border: '1px solid #ddd' }}><ChevronRight /></IconButton>
@@ -243,7 +246,7 @@ export default function Dashboard() {
 
             {/* Main Table */}
             <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ overflow: 'hidden' }}>
-                <Table size="small">
+                <Table size="small" sx={{ '& td': { py: 0.5, fontSize: '0.85rem' }, '& th': { py: 0.5, fontSize: '0.85rem' } }}>
                     <TableHead sx={{ bgcolor: 'background.default' }}>
                         <TableRow>
                             <TableCell width="30%">
@@ -291,7 +294,7 @@ export default function Dashboard() {
                             const rowColor = typeConfig?.color || theme.palette.taskTypes[imp.type] || '#fff';
 
                             return (
-                                <TableRow key={imp.id} sx={{ bgcolor: rowColor, '&:hover': { filter: 'brightness(0.98)' } }}>
+                                <TableRow key={imp.id} sx={{ bgcolor: rowColor, '&:hover': { filter: 'brightness(0.98)' }, '& td, & th': { borderBottom: 'none' } }}>
                                     <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
                                         <IconButton
                                             onClick={() => setTaskDescription(task)}
@@ -301,9 +304,44 @@ export default function Dashboard() {
                                         >
                                             <InfoOutlined fontSize="small" />
                                         </IconButton>
-                                        <Tooltip title="Ver descripción">
+                                        <Tooltip title={
+                                            <Box>
+                                                <Typography variant="body2">{task?.name}</Typography>
+                                                {task?.utes > 0 && (
+                                                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#ffcc80' }}>
+                                                        UTES: {(() => {
+                                                            const totalConsumed = imputations
+                                                                .filter(i => i.taskId === task.id)
+                                                                .reduce((acc, curr) => acc + Object.values(curr.hours).reduce((a, b) => a + (Number(b) || 0), 0), 0);
+                                                            const remaining = task.utes - totalConsumed;
+                                                            return (
+                                                                <span style={{ color: remaining < 0 ? '#ff5252' : 'inherit', fontWeight: remaining < 0 ? 'bold' : 'normal' }}>
+                                                                    {remaining.toLocaleString('es-ES', { maximumFractionDigits: 1 })} disponibles / {task.utes}
+                                                                </span>
+                                                            );
+                                                        })()}
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        }>
                                             <Typography variant="body2" noWrap sx={{ maxWidth: 250, fontWeight: 'medium' }}>
                                                 {task?.code} - {task?.name}
+                                                {task?.utes > 0 && (
+                                                    <Typography component="span" variant="caption" sx={{ ml: 1, color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
+                                                        {(() => {
+                                                            const totalConsumed = imputations
+                                                                .filter(i => i.taskId === task.id)
+                                                                .reduce((acc, curr) => acc + Object.values(curr.hours).reduce((a, b) => a + (Number(b) || 0), 0), 0);
+                                                            const remaining = task.utes - totalConsumed;
+                                                            // Show warning color if low?
+                                                            return (
+                                                                <span style={{ color: remaining < 0 ? '#d32f2f' : 'inherit', fontWeight: remaining < 0 ? 'bold' : 'normal' }}>
+                                                                    {remaining.toFixed(1)} UTES
+                                                                </span>
+                                                            );
+                                                        })()}
+                                                    </Typography>
+                                                )}
                                             </Typography>
                                         </Tooltip>
                                     </TableCell>
@@ -342,32 +380,39 @@ export default function Dashboard() {
                                             size="small"
                                         />
                                     </TableCell>
-                                    {dayKeys.map(day => (
-                                        <TableCell key={day} align="center" sx={{ p: 0.5 }}>
-                                            <InputBase
-                                                value={imp.hours[day] || ''}
-                                                onChange={(e) => updateHours(imp, day, e.target.value)}
-                                                disabled={isLocked}
-                                                type="number"
-                                                inputProps={{ min: 0, max: 24, step: 0.5, style: { textAlign: 'center' } }}
-                                                sx={{
-                                                    bgcolor: 'rgba(255,255,255,0.6)',
-                                                    borderRadius: 1,
-                                                    fontSize: '0.9rem',
-                                                    width: '100%',
-                                                    '&.Mui-focused': { bgcolor: '#fff', boxShadow: 1 },
-                                                    // Hide Spinners
-                                                    '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                                                        '-webkit-appearance': 'none',
-                                                        margin: 0,
-                                                    },
-                                                    '& input[type=number]': {
-                                                        '-moz-appearance': 'textfield',
-                                                    },
-                                                }}
-                                            />
-                                        </TableCell>
-                                    ))}
+                                    {weekDays.map((d, i) => {
+                                        const dayKey = dayKeys[i];
+                                        return (
+                                            <TableCell key={d.label} align="center" sx={{ p: '2px !important' }}>
+                                                <InputBase
+                                                    value={imp.hours[dayKey] === 0 ? '' : imp.hours[dayKey]}
+                                                    onChange={(e) => updateHours(imp, dayKey, e.target.value)}
+                                                    disabled={isLocked}
+                                                    inputProps={{
+                                                        min: 0,
+                                                        max: 24,
+                                                        step: 0.5,
+                                                        style: { textAlign: 'center' }
+                                                    }}
+                                                    sx={{
+                                                        width: '100%',
+                                                        border: '1px solid rgba(0,0,0,0.1)',
+                                                        borderRadius: 4,
+                                                        padding: '2px', // Compact padding
+                                                        backgroundColor: isLocked ? '#f5f5f5' : 'rgba(255,255,255,0.5)',
+                                                        fontSize: '0.85rem',
+                                                        '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                                                            '-webkit-appearance': 'none',
+                                                            margin: 0,
+                                                        },
+                                                        '& input[type=number]': {
+                                                            '-moz-appearance': 'textfield',
+                                                        },
+                                                    }}
+                                                />
+                                            </TableCell>
+                                        );
+                                    })}
                                     <TableCell align="center" sx={{ fontWeight: 'bold' }}>
                                         {Object.values(imp.hours).reduce((a, b) => a + b, 0)}h
                                     </TableCell>
@@ -437,20 +482,37 @@ export default function Dashboard() {
                         }}
                     >
                         {(() => {
-                            const worked = totalsByType.find(t => t.type.id === 'TRABAJADO_JIRA')?.total || 0;
+                            // Calculate Computable Hours Logic Updated:
+                            // Use the 'computesInWeek' property from TaskType.
+                            // If property is undefined, default to true (backward compatibility), 
+                            // BUT structure types might default to false if not migrated properly, so be careful.
+                            // Actually, we migrated them to true in backend. 
+                            // The filtered list should be based on this flag.
+
+                            const computableHours = rawTotals
+                                .filter(t => {
+                                    // t.type is the taskType object
+                                    // Check if explicit boolean exists, otherwise default true?
+                                    // Or rely on the list we had + new ones?
+                                    // The user said: "El widget... mostrará la suma de las tareas que estén marcadas como 'computa en la semana'."
+                                    // So we strictly follow the flag.
+                                    return t.type.computesInWeek !== false;
+                                })
+                                .reduce((acc, curr) => acc + curr.total, 0);
+
                             const target = 40;
-                            const diff = worked - target;
-                            const progress = Math.min((worked / target) * 100, 100);
+                            const diff = computableHours - target;
+                            const progress = Math.min((computableHours / target) * 100, 100);
 
                             let statusColor = 'warning.main';
                             let statusText = `Te faltan ${Math.abs(diff)}h`;
                             let statusIcon = "⏳";
 
-                            if (worked > 40) {
+                            if (computableHours > 40) {
                                 statusColor = 'error.main';
                                 statusText = `Exceso: +${diff}h`;
                                 statusIcon = "⚠️";
-                            } else if (worked === 40) {
+                            } else if (computableHours === 40) {
                                 statusColor = 'success.main';
                                 statusText = "Objetivo cumplido.";
                                 statusIcon = "✅";
@@ -460,10 +522,10 @@ export default function Dashboard() {
                                 <Box>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                         <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'text.secondary' }}>
-                                            HORAS TRABAJADAS
+                                            TOTAL COMPUTABLE
                                         </Typography>
                                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: statusColor }}>
-                                            {worked} / {target} h
+                                            {computableHours} / {target} h
                                         </Typography>
                                     </Box>
 
@@ -486,7 +548,7 @@ export default function Dashboard() {
                                                 {statusText}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
-                                                {worked < 40 ? 'Completa tu jornada semanal' : worked > 40 ? 'Revisa tus horas extras' : 'semana completa'}
+                                                {computableHours < 40 ? 'Completa tu jornada semanal' : computableHours > 40 ? 'Revisa tus horas extras' : 'semana completa'}
                                             </Typography>
                                         </Box>
                                     </Box>

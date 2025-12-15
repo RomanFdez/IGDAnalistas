@@ -1,15 +1,19 @@
+
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import {
     Box, Typography, Paper, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, Checkbox, IconButton, Switch,
-    Tabs, Tab, Grid, TextField, Button, Divider, Chip, FormControlLabel, Tooltip
+    Tabs, Tab, Grid, TextField, Button, Divider, Chip, FormControlLabel, Tooltip,
+    Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
-import { Save, PersonAdd, School, VpnKey, DeleteOutline } from '@mui/icons-material';
+import { Save, PersonAdd, School, VpnKey, DeleteOutline, Add } from '@mui/icons-material';
 
 function TaskTypesTab() {
-    const { taskTypes, updateTaskType, deleteTaskType } = useData();
+    const { taskTypes, updateTaskType, deleteTaskType, addTaskType } = useData();
+    const [openAdd, setOpenAdd] = useState(false);
+    const [newType, setNewType] = useState({ id: '', label: '', color: '#ffffff' });
 
     const handleColorChange = (id, newColor) => {
         updateTaskType(id, { color: newColor });
@@ -29,88 +33,149 @@ function TaskTypesTab() {
         }
     };
 
+    const handleCreateType = () => {
+        if (!newType.id || !newType.label) return;
+        addTaskType({ ...newType, structural: false });
+        setOpenAdd(false);
+        setNewType({ id: '', label: '', color: '#ffffff' });
+    };
+
     return (
-        <TableContainer component={Paper} variant="outlined" elevation={0}>
-            <Table>
-                <TableHead sx={{ bgcolor: 'background.default' }}>
-                    <TableRow>
-                        <TableCell>ID</TableCell>
-                        <TableCell>Etiqueta</TableCell>
-                        <TableCell>Color de Fondo</TableCell>
-                        <TableCell align="center">Es Estructural</TableCell>
-                        <TableCell width={50}></TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {taskTypes.map(type => (
-                        <TableRow key={type.id} hover>
-                            <TableCell>{type.id}</TableCell>
-                            <TableCell>
-                                <TextField
-                                    variant="outlined"
-                                    size="small"
-                                    value={type.label}
-                                    onChange={(e) => updateTaskType(type.id, { label: e.target.value })}
-                                    sx={{ fontWeight: 'medium', bgcolor: 'white' }}
-                                    fullWidth
-                                />
-                            </TableCell>
-                            <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Tooltip title="Clic para cambiar color">
-                                        <Box sx={{ position: 'relative', width: 32, height: 32, cursor: 'pointer', transition: 'transform 0.1s', '&:hover': { transform: 'scale(1.1)' } }}>
-                                            <Box
-                                                sx={{
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    borderRadius: 2,
-                                                    bgcolor: type.color,
-                                                    border: '1px solid rgba(0,0,0,0.1)',
-                                                    boxShadow: 1
-                                                }}
-                                            />
-                                            <input
-                                                type="color"
-                                                value={type.color || '#ffffff'}
-                                                onChange={(e) => handleColorChange(type.id, e.target.value)}
-                                                style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    opacity: 0,
-                                                    cursor: 'pointer',
-                                                    border: 'none',
-                                                    padding: 0
-                                                }}
-                                            />
-                                        </Box>
-                                    </Tooltip>
-                                </Box>
-                            </TableCell>
-                            <TableCell align="center">
-                                <Switch
-                                    checked={!!type.structural}
-                                    onChange={(e) => handleStructuralChange(type.id, e.target.checked)}
-                                    color="primary"
-                                />
-                            </TableCell>
-                            <TableCell>
-                                <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() => handleDeleteType(type.id)}
-                                    title="Eliminar Tipo de Tarea"
-                                >
-                                    <DeleteOutline />
-                                </IconButton>
-                            </TableCell>
+        <Box>
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <Button variant="contained" startIcon={<Add />} onClick={() => setOpenAdd(true)}>
+                    Nuevo Tipo
+                </Button>
+            </Box>
+            <TableContainer component={Paper} variant="outlined" elevation={0}>
+                <Table size="small">
+                    <TableHead sx={{ bgcolor: 'background.default' }}>
+                        <TableRow>
+                            <TableCell>ID</TableCell>
+                            <TableCell>Etiqueta</TableCell>
+                            <TableCell>Color de Fondo</TableCell>
+                            <TableCell align="center">Es Estructural</TableCell>
+                            <TableCell align="center">Computa Sem.</TableCell>
+                            <TableCell width={50}></TableCell>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                        {taskTypes.map((type) => (
+                            <TableRow key={type.id} hover sx={{ '& td': { py: 0.5 } }}>
+                                <TableCell>{type.id}</TableCell>
+                                <TableCell>
+                                    <TextField
+                                        variant="outlined"
+                                        size="small"
+                                        value={type.label}
+                                        onChange={(e) => updateTaskType(type.id, { label: e.target.value })}
+                                        sx={{ fontWeight: 'medium', bgcolor: 'white', '& .MuiInputBase-input': { py: 0.5 } }}
+                                        fullWidth
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <Box
+                                        sx={{
+                                            width: 28,
+                                            height: 28,
+                                            bgcolor: type.color,
+                                            border: '1px solid #ddd',
+                                            borderRadius: 1,
+                                            cursor: 'pointer',
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        <input
+                                            type="color"
+                                            value={type.color}
+                                            onChange={(e) => handleColorChange(type.id, e.target.value)}
+                                            style={{
+                                                opacity: 0,
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                width: '100%',
+                                                height: '100%',
+                                                cursor: 'pointer'
+                                            }}
+                                        />
+                                    </Box>
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Switch
+                                        size="small"
+                                        checked={!!type.structural}
+                                        onChange={(e) => handleStructuralChange(type.id, e.target.checked)}
+                                        color="primary"
+                                    />
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Switch
+                                        size="small"
+                                        checked={type.computesInWeek !== false} // Default true
+                                        onChange={(e) => updateTaskType(type.id, { computesInWeek: e.target.checked })}
+                                        color="secondary"
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={() => handleDeleteType(type.id)}
+                                        title="Eliminar Tipo de Tarea"
+                                    >
+                                        <DeleteOutline />
+                                    </IconButton>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+
+            {/* Add Type Dialog */}
+            <Dialog open={openAdd} onClose={() => setOpenAdd(false)}>
+                <DialogTitle>Nuevo Tipo de Tarea</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, minWidth: 300 }}>
+                        <TextField
+                            label="ID (Único, ej: VIAJE)"
+                            value={newType.id}
+                            onChange={(e) => setNewType({ ...newType, id: e.target.value.toUpperCase() })}
+                            fullWidth
+                            helperText="Debe ser único y sin espacios"
+                        />
+                        <TextField
+                            label="Etiqueta"
+                            value={newType.label}
+                            onChange={(e) => setNewType({ ...newType, label: e.target.value })}
+                            fullWidth
+                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography>Color:</Typography>
+                            <input
+                                type="color"
+                                value={newType.color}
+                                onChange={(e) => setNewType({ ...newType, color: e.target.value })}
+                            />
+                        </Box>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={newType.computesInWeek !== false}
+                                    onChange={(e) => setNewType({ ...newType, computesInWeek: e.target.checked })}
+                                />
+                            }
+                            label="Computa en Total Semanal"
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenAdd(false)}>Cancelar</Button>
+                    <Button onClick={handleCreateType} variant="contained">Crear</Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
     );
 }
 
@@ -198,7 +263,7 @@ function UsersTab() {
 
         // Name Update
         if (editName.trim()) {
-            updates.name = `${editName.trim()} ${editSurname.trim()}`;
+            updates.name = `${editName.trim()} ${editSurname.trim()} `;
         }
 
         // Password Update

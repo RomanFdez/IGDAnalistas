@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start-server": "node server/index.js",
+    "dev:full": "concurrently \"npm run start-server\" \"npm run dev\"",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
@@ -15,11 +17,17 @@
     "@mui/icons-material": "^7.3.6",
     "@mui/material": "^7.3.6",
     "clsx": "^2.0.0",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.5",
     "date-fns": "^2.30.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
     "lucide-react": "^0.294.0",
+    "mongoose": "^9.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",
+    "recharts": "^3.6.0",
     "tailwind-merge": "^2.0.0",
     "xlsx": "^0.18.5"
   },

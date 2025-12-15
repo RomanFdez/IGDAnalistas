@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Approvals from './pages/Approvals';
+import Statistics from './pages/Statistics';
 // UserManagement import removed
 import Admin from './pages/Admin';
 import Layout from './components/Layout';
@@ -62,6 +63,12 @@ function App() {
                             <Route path="/approvals" element={
                                 <ProtectedRoute>
                                     <Layout><Approvals /></Layout>
+                                </ProtectedRoute>
+                            } />
+
+                            <Route path="/statistics" element={
+                                <ProtectedRoute roles={['APPROVER']}>
+                                    <Layout><Statistics /></Layout>
                                 </ProtectedRoute>
                             } />
 
