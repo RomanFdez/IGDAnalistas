@@ -269,7 +269,7 @@ const seedUsers = async () => {
                 id: 'admin-user',
                 name: 'Admin',
                 password: 'admin',
-                role: 'approver',
+                roles: ['APPROVER'],
                 maxHours: 40
             });
             await newUser.save();
