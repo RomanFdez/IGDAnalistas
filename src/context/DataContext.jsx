@@ -20,6 +20,12 @@ const DEFAULT_TASK_TYPES = [
     { id: 'OTROS', label: 'Otros', color: '#ECEFF1', structural: false }
 ];
 
+const generateUUID = () => {
+    return (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+};
+
 export const DataProvider = ({ children }) => {
     const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
@@ -53,7 +59,7 @@ export const DataProvider = ({ children }) => {
     // --- ACTIONS ---
 
     const addTask = async (newTask) => {
-        const taskWithId = { ...newTask, id: crypto.randomUUID(), active: true, assignedUserIds: [user.id] };
+        const taskWithId = { ...newTask, id: generateUUID(), active: true, assignedUserIds: [user.id] };
         // Optimistic UI
         setTasks(prev => [...prev, taskWithId]);
 
@@ -116,7 +122,7 @@ export const DataProvider = ({ children }) => {
     };
 
     const addOrUpdateImputation = async (imputation) => {
-        const idToUse = imputation.id || crypto.randomUUID();
+        const idToUse = imputation.id || generateUUID();
         const imputationWithId = { ...imputation, id: idToUse };
 
         // Optimistic
