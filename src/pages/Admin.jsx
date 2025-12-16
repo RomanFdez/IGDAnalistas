@@ -43,7 +43,7 @@ function TaskTypesTab() {
     const handleExport = () => {
         const headers = ['id', 'label', 'color', 'structural', 'computesInWeek', 'subtractsFromBudget'];
         const csvContent = [
-            headers.join(','),
+            headers.join(';'),
             ...taskTypes.map(t => [
                 t.id,
                 `"${t.label}"`,
@@ -51,7 +51,7 @@ function TaskTypesTab() {
                 t.structural,
                 t.computesInWeek,
                 t.subtractsFromBudget
-            ].join(','))
+            ].join(';'))
         ].join('\n');
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -72,8 +72,9 @@ function TaskTypesTab() {
                 const rows = text.split('\n').slice(1); // Skip header
                 let count = 0;
                 rows.forEach(row => {
-                    // Simple CSV parser handling quoted strings
-                    const cols = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(',');
+                    if (!row.trim()) return;
+
+                    const cols = row.split(';');
                     if (cols.length < 2) return;
 
                     // Clean quotes if present
