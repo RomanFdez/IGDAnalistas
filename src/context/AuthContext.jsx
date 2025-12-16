@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch('http://localhost:3001/api/users');
+                const response = await fetch('/api/users');
                 if (response.ok) {
                     const data = await response.json();
                     setUsers(data);
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
 
         // Retaining hybrid approach: If we want to validate securely, we should hit /api/login
         try {
-            const response = await fetch('http://localhost:3001/api/login', {
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }) => {
         };
 
         try {
-            const res = await fetch('http://localhost:3001/api/users', {
+            const res = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newUser)
@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }) => {
         // Optimistic update
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...changes } : u));
         try {
-            await fetch(`http://localhost:3001/api/users/${userId}`, {
+            await fetch(`/api/users/${userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(changes)

@@ -32,7 +32,7 @@ export const DataProvider = ({ children }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch('http://localhost:3001/api/initial-data');
+                const res = await fetch('/api/initial-data');
                 if (res.ok) {
                     const data = await res.json();
                     setTaskTypes(data.taskTypes || []);
@@ -58,7 +58,7 @@ export const DataProvider = ({ children }) => {
         setTasks(prev => [...prev, taskWithId]);
 
         try {
-            await fetch('http://localhost:3001/api/tasks', {
+            await fetch('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(taskWithId)
@@ -78,7 +78,7 @@ export const DataProvider = ({ children }) => {
             // Optimistic
             setTasks(prev => prev.map(t => t.id === taskId ? { ...t, assignedUserIds: newAssignees } : t));
 
-            await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+            await fetch(`/api/tasks/${taskId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ assignedUserIds: newAssignees })
@@ -93,7 +93,7 @@ export const DataProvider = ({ children }) => {
         const newActive = !task.active;
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, active: newActive } : t));
 
-        await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+        await fetch(`/api/tasks/${taskId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ active: newActive })
@@ -105,7 +105,7 @@ export const DataProvider = ({ children }) => {
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t));
 
         try {
-            await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+            await fetch(`/api/tasks/${taskId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updates)
@@ -131,7 +131,7 @@ export const DataProvider = ({ children }) => {
         });
 
         try {
-            await fetch('http://localhost:3001/api/imputations', {
+            await fetch('/api/imputations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(imputationWithId)
@@ -144,7 +144,7 @@ export const DataProvider = ({ children }) => {
     const deleteImputation = async (id) => {
         setImputations(prev => prev.filter(i => i.id !== id));
         try {
-            await fetch(`http://localhost:3001/api/imputations/${id}`, { method: 'DELETE' });
+            await fetch(`/api/imputations/${id}`, { method: 'DELETE' });
         } catch (error) {
             console.error("Error deleting imputation:", error);
         }
@@ -155,7 +155,7 @@ export const DataProvider = ({ children }) => {
         setWeekLocks(prev => ({ ...prev, [weekId]: isLocked }));
 
         try {
-            await fetch('http://localhost:3001/api/locks', {
+            await fetch('/api/locks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ weekId, isLocked })
@@ -171,7 +171,7 @@ export const DataProvider = ({ children }) => {
         setTaskTypes(prev => prev.map(t => t.id === typeId ? { ...t, ...changes } : t));
 
         try {
-            await fetch(`http://localhost:3001/api/task-types/${typeId}`, {
+            await fetch(`/api/task-types/${typeId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(changes)
@@ -186,7 +186,7 @@ export const DataProvider = ({ children }) => {
         setTaskTypes(prev => [...prev, newType]);
 
         try {
-            await fetch('http://localhost:3001/api/task-types', {
+            await fetch('/api/task-types', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newType)
@@ -205,7 +205,7 @@ export const DataProvider = ({ children }) => {
         setTaskTypes(prev => prev.filter(t => t.id !== typeId)); // Optimistic
 
         try {
-            const res = await fetch(`http://localhost:3001/api/task-types/${typeId}`, { method: 'DELETE' });
+            const res = await fetch(`/api/task-types/${typeId}`, { method: 'DELETE' });
             if (!res.ok) {
                 const err = await res.json();
                 // Revert or alert? Warning user.

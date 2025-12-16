@@ -159,3 +159,25 @@
   computesInWeek: false,
   subtractsFromBudget: true
 }
+[PUT TaskType] Updating PENDIENTE with: { computesInWeek: false }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a855'),
+  id: 'PENDIENTE',
+  label: 'Pendiente',
+  color: '#f4a4c0',
+  structural: false,
+  __v: 0,
+  computesInWeek: false,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating PENDIENTE with: { computesInWeek: true }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a855'),
+  id: 'PENDIENTE',
+  label: 'Pendiente',
+  color: '#f4a4c0',
+  structural: false,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: false
+}
