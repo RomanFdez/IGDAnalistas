@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Models
 import User from './models/User.js';
@@ -9,6 +11,9 @@ import Task from './models/Task.js';
 import TaskType from './models/TaskType.js';
 import Imputation from './models/Imputation.js';
 import WeekLock from './models/WeekLock.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -110,7 +115,9 @@ app.post('/api/task-types', async (req, res) => {
 
 app.put('/api/task-types/:id', async (req, res) => {
     try {
+        console.log(`[PUT TaskType] Updating ${req.params.id} with:`, req.body);
         const updated = await TaskType.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+        console.log(`[PUT TaskType] Result:`, updated);
         res.json(updated);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -239,14 +246,36 @@ const seedTaskTypes = async () => {
         if (result.modifiedCount > 0) {
             console.log(`✅ Migrated ${result.modifiedCount} TaskTypes to include 'computesInWeek'`);
         }
+
+        // Migration: Ensure all TaskTypes have 'subtractsFromBudget'
+        const result2 = await TaskType.updateMany(
+            { subtractsFromBudget: { $exists: false } },
+            { $set: { subtractsFromBudget: true } }
+        );
+
+        if (result2.modifiedCount > 0) {
+            console.log(`✅ Migrated ${result2.modifiedCount} TaskTypes to include 'subtractsFromBudget'`);
+        }
     } catch (err) {
         console.error('❌ Error migrating TaskTypes:', err);
     }
 }
 
+// Serve Static Assets in Production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../dist')));
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, '../dist', 'index.html'));
+    });
+}
+
 // Start Server
 app.listen(PORT, async () => {
     await seedGlobalTasks();
+    // Commented out to prevent potential conflicts if this was unintended (though it seems safe as it is migration only)
+    // await seedTaskTypes(); 
+    // Re-enabling because it handles migration of new fields.
     await seedTaskTypes();
     console.log(`🚀 Server running on port ${PORT}`);
 });

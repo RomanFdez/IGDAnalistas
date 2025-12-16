@@ -235,21 +235,46 @@ export default function Tasks() {
                         </TableSortLabel>
                       </TableCell>
                       <TableCell align="center">UTES</TableCell>
-                      <TableCell align="center">UTES Gastadas</TableCell>
-                      <TableCell align="center">UTES Quedan</TableCell>
+                      <TableCell align="center">UTES Imputadas</TableCell>
+                      <TableCell align="center">UTES Pendientes imputar</TableCell>
+                      <TableCell align="center">UTES Preimputadas disponibles</TableCell>
+                      <TableCell align="center">UTES Pendiente regularizar</TableCell>
                       <TableCell align="center">Estado</TableCell>
                       <TableCell align="right">Acciones</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {visibleTasks.length === 0 ? (
-                      <TableRow><TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>No se encontraron tareas.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary' }}>No se encontraron tareas.</TableCell></TableRow>
                     ) : visibleTasks.map(task => {
                       const taskImputations = imputations.filter(i => i.taskId === task.id);
-                      const gastadas = taskImputations.reduce((sum, imp) =>
-                        sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0)
-                        , 0);
+
+                      // UTES Gastadas (All 'subtracts' types)
+                      const gastadas = taskImputations.reduce((sum, imp) => {
+                        const typeInfo = taskTypes.find(t => t.id === imp.type);
+                        if (typeInfo && typeInfo.subtractsFromBudget === false) return sum;
+                        return sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0);
+                      }, 0);
+
+                      // UTES Preimputadas Calculation
+                      const preImputedTotal = taskImputations.reduce((sum, imp) => {
+                        return imp.type === 'PRE_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                      }, 0);
+
+                      const yaImputadoTotal = taskImputations.reduce((sum, imp) => {
+                        return imp.type === 'YA_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                      }, 0);
+
+                      const preImputedRemaining = preImputedTotal - yaImputadoTotal;
                       const quedan = (task.utes || 0) - gastadas;
+
+                      const pendingTotal = taskImputations.reduce((sum, imp) => {
+                        return imp.type === 'PENDIENTE' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                      }, 0);
+                      const regularizedTotal = taskImputations.reduce((sum, imp) => {
+                        return imp.type === 'REGULARIZADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                      }, 0);
+                      const pendingRegularize = pendingTotal - regularizedTotal;
 
                       return (
                         <TableRow key={task.id} hover>
@@ -272,6 +297,26 @@ export default function Tasks() {
                             }}>
                               {task.utes > 0 ? quedan : '-'}
                             </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="Preimputadas disponibles (Preimputadas - Ya Imputado)">
+                              <Typography variant="body2" sx={{
+                                fontWeight: 'bold',
+                                color: preImputedRemaining < 0 ? 'error.main' : (preImputedRemaining > 0 ? 'success.main' : 'text.secondary')
+                              }}>
+                                {preImputedRemaining !== 0 ? preImputedRemaining : '-'}
+                              </Typography>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="Pendiente regularizar (Pendiente - Regularizado)">
+                              <Typography variant="body2" sx={{
+                                fontWeight: 'bold',
+                                color: pendingRegularize < 0 ? 'error.main' : (pendingRegularize > 0 ? 'warning.main' : 'text.secondary')
+                              }}>
+                                {pendingRegularize !== 0 ? pendingRegularize : '-'}
+                              </Typography>
+                            </Tooltip>
                           </TableCell>
                           <TableCell align="center">
                             <Chip
@@ -320,7 +365,8 @@ export default function Tasks() {
                           </TableCell>
                         </TableRow>
                       );
-                    })}
+                    })
+                    }
                   </TableBody>
                 </Table>
               </TableContainer>

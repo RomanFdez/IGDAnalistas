@@ -1,0 +1,161 @@
+
+> imputaciones-gd-mapfre@0.0.0 start-server
+> node server/index.js
+
+✅ Connected to MongoDB at mongodb://igdapp:Castellae1259@192.168.1.63/igdanalistas?authSource=admin
+✅ Migrated 11 TaskTypes to include 'subtractsFromBudget'
+🚀 Server running on port 3001
+[PUT TaskType] Updating RECUPERADO with: { subtractsFromBudget: false }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a857'),
+  id: 'RECUPERADO',
+  label: 'Recuperado',
+  color: '#E1BEE7',
+  structural: false,
+  __v: 0,
+  computesInWeek: false,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating YA_IMPUTADO with: { subtractsFromBudget: false }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a852'),
+  id: 'YA_IMPUTADO',
+  label: 'Ya imputado',
+  color: '#E3F2FD',
+  structural: false,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating YA_IMPUTADO with: { subtractsFromBudget: true }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a852'),
+  id: 'YA_IMPUTADO',
+  label: 'Ya imputado',
+  color: '#E3F2FD',
+  structural: false,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: true
+}
+[PUT TaskType] Updating RECUPERADO with: { subtractsFromBudget: true }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a857'),
+  id: 'RECUPERADO',
+  label: 'Recuperado',
+  color: '#E1BEE7',
+  structural: false,
+  __v: 0,
+  computesInWeek: false,
+  subtractsFromBudget: true
+}
+[PUT TaskType] Updating YA_IMPUTADO with: { subtractsFromBudget: false }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a852'),
+  id: 'YA_IMPUTADO',
+  label: 'Ya imputado',
+  color: '#E3F2FD',
+  structural: false,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating SIN_PROYECTO with: { subtractsFromBudget: false }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a854'),
+  id: 'SIN_PROYECTO',
+  label: 'Sin proyecto',
+  color: '#F5F5F5',
+  structural: true,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating FESTIVO with: { subtractsFromBudget: false }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a85a'),
+  id: 'FESTIVO',
+  label: 'Festivo',
+  color: '#B0BEC5',
+  structural: true,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating ENFERMEDAD with: { subtractsFromBudget: false }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a859'),
+  id: 'ENFERMEDAD',
+  label: 'Enfermedad',
+  color: '#CFD8DC',
+  structural: true,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating VACACIONES with: { subtractsFromBudget: false }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a858'),
+  id: 'VACACIONES',
+  label: 'Vacaciones',
+  color: '#ECEFF1',
+  structural: true,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating PENDIENTE with: { subtractsFromBudget: false }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a855'),
+  id: 'PENDIENTE',
+  label: 'Pendiente',
+  color: '#FCE4EC',
+  structural: false,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating RECUPERADO with: { color: '#d357fe' }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a857'),
+  id: 'RECUPERADO',
+  label: 'Recuperado',
+  color: '#d357fe',
+  structural: false,
+  __v: 0,
+  computesInWeek: false,
+  subtractsFromBudget: true
+}
+[PUT TaskType] Updating REGULARIZADO with: { color: '#f4a4c0' }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a856'),
+  id: 'REGULARIZADO',
+  label: 'Regularizado',
+  color: '#f4a4c0',
+  structural: false,
+  __v: 0,
+  computesInWeek: false,
+  subtractsFromBudget: true
+}
+[PUT TaskType] Updating PENDIENTE with: { color: '#f4a4c0' }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a855'),
+  id: 'PENDIENTE',
+  label: 'Pendiente',
+  color: '#f4a4c0',
+  structural: false,
+  __v: 0,
+  computesInWeek: true,
+  subtractsFromBudget: false
+}
+[PUT TaskType] Updating REGULARIZADO with: { color: '#ffdad8' }
+[PUT TaskType] Result: {
+  _id: new ObjectId('69401dd1336f8a1b7745a856'),
+  id: 'REGULARIZADO',
+  label: 'Regularizado',
+  color: '#ffdad8',
+  structural: false,
+  __v: 0,
+  computesInWeek: false,
+  subtractsFromBudget: true
+}

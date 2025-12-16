@@ -116,23 +116,25 @@ export const DataProvider = ({ children }) => {
     };
 
     const addOrUpdateImputation = async (imputation) => {
+        const idToUse = imputation.id || crypto.randomUUID();
+        const imputationWithId = { ...imputation, id: idToUse };
+
         // Optimistic
         setImputations(prev => {
-            const existingIndex = prev.findIndex(i => i.id === imputation.id);
+            const existingIndex = prev.findIndex(i => i.id === idToUse);
             if (existingIndex >= 0) {
                 const newImps = [...prev];
-                newImps[existingIndex] = imputation;
+                newImps[existingIndex] = imputationWithId;
                 return newImps;
             }
-            return [...prev, { ...imputation, id: imputation.id || crypto.randomUUID() }];
+            return [...prev, imputationWithId];
         });
 
         try {
-            const payload = { ...imputation, id: imputation.id || crypto.randomUUID() };
             await fetch('http://localhost:3001/api/imputations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(imputationWithId)
             });
         } catch (error) {
             console.error("Error saving imputation:", error);

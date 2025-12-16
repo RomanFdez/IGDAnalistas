@@ -245,7 +245,7 @@ export default function Dashboard() {
             )}
 
             {/* Main Table */}
-            <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ overflow: 'hidden' }}>
+            <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ overflowX: 'auto' }}>
                 <Table size="small" sx={{ '& td': { py: 0.5, fontSize: '0.85rem' }, '& th': { py: 0.5, fontSize: '0.85rem' } }}>
                     <TableHead sx={{ bgcolor: 'background.default' }}>
                         <TableRow>
@@ -312,7 +312,11 @@ export default function Dashboard() {
                                                         UTES: {(() => {
                                                             const totalConsumed = imputations
                                                                 .filter(i => i.taskId === task.id)
-                                                                .reduce((acc, curr) => acc + Object.values(curr.hours).reduce((a, b) => a + (Number(b) || 0), 0), 0);
+                                                                .reduce((acc, curr) => {
+                                                                    const typeInfo = taskTypes.find(t => t.id === curr.type);
+                                                                    if (typeInfo && typeInfo.subtractsFromBudget === false) return acc;
+                                                                    return acc + Object.values(curr.hours).reduce((a, b) => a + (Number(b) || 0), 0);
+                                                                }, 0);
                                                             const remaining = task.utes - totalConsumed;
                                                             return (
                                                                 <span style={{ color: remaining < 0 ? '#ff5252' : 'inherit', fontWeight: remaining < 0 ? 'bold' : 'normal' }}>
@@ -324,25 +328,55 @@ export default function Dashboard() {
                                                 )}
                                             </Box>
                                         }>
-                                            <Typography variant="body2" noWrap sx={{ maxWidth: 250, fontWeight: 'medium' }}>
-                                                {task?.code} - {task?.name}
+                                            <Box>
+                                                <Typography variant="body2" noWrap sx={{ maxWidth: 250, fontWeight: 'medium' }}>
+                                                    {task?.code} - {task?.name}
+                                                </Typography>
                                                 {task?.utes > 0 && (
-                                                    <Typography component="span" variant="caption" sx={{ ml: 1, color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
-                                                        {(() => {
-                                                            const totalConsumed = imputations
-                                                                .filter(i => i.taskId === task.id)
-                                                                .reduce((acc, curr) => acc + Object.values(curr.hours).reduce((a, b) => a + (Number(b) || 0), 0), 0);
-                                                            const remaining = task.utes - totalConsumed;
-                                                            // Show warning color if low?
-                                                            return (
-                                                                <span style={{ color: remaining < 0 ? '#d32f2f' : 'inherit', fontWeight: remaining < 0 ? 'bold' : 'normal' }}>
-                                                                    {remaining.toFixed(1)} UTES
-                                                                </span>
-                                                            );
-                                                        })()}
-                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                                                        <Tooltip title="UTES Pendientes de Imputar">
+                                                            <Typography variant="caption" sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
+                                                                {(() => {
+                                                                    const totalConsumed = imputations
+                                                                        .filter(i => i.taskId === task.id)
+                                                                        .reduce((acc, curr) => {
+                                                                            const typeInfo = taskTypes.find(t => t.id === curr.type);
+                                                                            if (typeInfo && typeInfo.subtractsFromBudget === false) return acc;
+                                                                            return acc + Object.values(curr.hours).reduce((a, b) => a + (Number(b) || 0), 0);
+                                                                        }, 0);
+                                                                    const remaining = task.utes - totalConsumed;
+                                                                    return (
+                                                                        <span style={{ color: remaining < 0 ? '#d32f2f' : 'inherit', fontWeight: remaining < 0 ? 'bold' : 'normal' }}>
+                                                                            {remaining.toFixed(1)} Disponibles
+                                                                        </span>
+                                                                    );
+                                                                })()}
+                                                            </Typography>
+                                                        </Tooltip>
+
+                                                        <Tooltip title="UTES Preimputadas Disponibles">
+                                                            <Typography variant="caption" sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
+                                                                {(() => {
+                                                                    const taskImputations = imputations.filter(i => i.taskId === task.id);
+                                                                    const preImputedTotal = taskImputations.reduce((sum, imp) => {
+                                                                        return imp.type === 'PRE_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                                                                    }, 0);
+                                                                    const yaImputadoTotal = taskImputations.reduce((sum, imp) => {
+                                                                        return imp.type === 'YA_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                                                                    }, 0);
+                                                                    const preRemaining = preImputedTotal - yaImputadoTotal;
+
+                                                                    return (
+                                                                        <span style={{ color: preRemaining < 0 ? '#d32f2f' : (preRemaining > 0 ? '#2e7d32' : 'inherit'), fontWeight: preRemaining !== 0 ? 'bold' : 'normal' }}>
+                                                                            {preRemaining.toFixed(1)} Preimputadas
+                                                                        </span>
+                                                                    );
+                                                                })()}
+                                                            </Typography>
+                                                        </Tooltip>
+                                                    </Box>
                                                 )}
-                                            </Typography>
+                                            </Box>
                                         </Tooltip>
                                     </TableCell>
                                     <TableCell>

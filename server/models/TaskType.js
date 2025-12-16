@@ -5,7 +5,8 @@ const TaskTypeSchema = new mongoose.Schema({
     label: { type: String, required: true },
     color: { type: String },
     structural: { type: Boolean, default: false },
-    computesInWeek: { type: Boolean, default: true }
+    computesInWeek: { type: Boolean, default: true },
+    subtractsFromBudget: { type: Boolean, default: true }
 });
 
 export default mongoose.model('TaskType', TaskTypeSchema);

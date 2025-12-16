@@ -56,6 +56,7 @@ function TaskTypesTab() {
                             <TableCell>Color de Fondo</TableCell>
                             <TableCell align="center">Es Estructural</TableCell>
                             <TableCell align="center">Computa Sem.</TableCell>
+                            <TableCell align="center">Resta UTES</TableCell>
                             <TableCell width={50}></TableCell>
                         </TableRow>
                     </TableHead>
@@ -115,6 +116,14 @@ function TaskTypesTab() {
                                         checked={type.computesInWeek !== false} // Default true
                                         onChange={(e) => updateTaskType(type.id, { computesInWeek: e.target.checked })}
                                         color="secondary"
+                                    />
+                                </TableCell>
+                                <TableCell align="center">
+                                    <Switch
+                                        size="small"
+                                        checked={type.subtractsFromBudget !== false} // Default true
+                                        onChange={(e) => updateTaskType(type.id, { subtractsFromBudget: e.target.checked })}
+                                        color="warning"
                                     />
                                 </TableCell>
                                 <TableCell>
@@ -192,6 +201,16 @@ function TaskTypesTab() {
                                 />
                             }
                             label="Computa en Total Semanal"
+                        />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={newType.subtractsFromBudget !== false}
+                                    onChange={(e) => setNewType({ ...newType, subtractsFromBudget: e.target.checked })}
+                                    color="warning"
+                                />
+                            }
+                            label="Resta UTES de la Tarea"
                         />
                     </Box>
                 </DialogContent>
