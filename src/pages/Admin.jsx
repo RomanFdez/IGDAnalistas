@@ -13,7 +13,7 @@ import { Save, PersonAdd, School, VpnKey, DeleteOutline, Add } from '@mui/icons-
 function TaskTypesTab() {
     const { taskTypes, updateTaskType, deleteTaskType, addTaskType } = useData();
     const [openAdd, setOpenAdd] = useState(false);
-    const [newType, setNewType] = useState({ id: '', label: '', color: '#ffffff' });
+    const [newType, setNewType] = useState({ id: '', label: '', color: '#ffffff', structural: false });
 
     const handleColorChange = (id, newColor) => {
         updateTaskType(id, { color: newColor });
@@ -35,9 +35,9 @@ function TaskTypesTab() {
 
     const handleCreateType = () => {
         if (!newType.id || !newType.label) return;
-        addTaskType({ ...newType, structural: false });
+        addTaskType(newType);
         setOpenAdd(false);
-        setNewType({ id: '', label: '', color: '#ffffff' });
+        setNewType({ id: '', label: '', color: '#ffffff', structural: false });
     };
 
     return (
@@ -212,11 +212,27 @@ function TaskTypesTab() {
                             }
                             label="Resta UTES de la Tarea"
                         />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={!!newType.structural}
+                                    onChange={(e) => setNewType({ ...newType, structural: e.target.checked })}
+                                    color="primary"
+                                />
+                            }
+                            label="Es Estructural (No se puede imputar directamente)"
+                        />
                     </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenAdd(false)}>Cancelar</Button>
-                    <Button onClick={handleCreateType} variant="contained">Crear</Button>
+                    <Button
+                        onClick={handleCreateType}
+                        variant="contained"
+                        disabled={!newType.id || !newType.label}
+                    >
+                        Crear
+                    </Button>
                 </DialogActions>
             </Dialog>
         </Box>
