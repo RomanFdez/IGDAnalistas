@@ -107,6 +107,7 @@ export const DataProvider = ({ children }) => {
         });
     };
 
+
     const updateTask = async (taskId, updates) => {
         // Optimistic
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t));
@@ -119,6 +120,15 @@ export const DataProvider = ({ children }) => {
             });
         } catch (error) {
             console.error("Error updating task:", error);
+        }
+    };
+
+    const deleteTask = async (taskId) => {
+        setTasks(prev => prev.filter(t => t.id !== taskId));
+        try {
+            await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+        } catch (error) {
+            console.error("Error deleting task:", error);
         }
     };
 
@@ -262,7 +272,7 @@ export const DataProvider = ({ children }) => {
             addTask, toggleTaskStatus, updateTaskAssignee,
             addOrUpdateImputation, deleteImputation,
             toggleWeekLock, isWeekLocked,
-            getTasksForUser, getAllTasks,
+            getTasksForUser, getAllTasks, deleteTask,
             updateTask,
             updateTaskType, deleteTaskType, addTaskType
         }}>

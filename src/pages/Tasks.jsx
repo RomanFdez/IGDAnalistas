@@ -10,7 +10,7 @@ import {
   Tooltip, Dialog, Tabs, Tab
 } from '@mui/material';
 import {
-  Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock, Edit
+  Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock, Edit, DeleteOutline
 } from '@mui/icons-material';
 import TaskFormDialog from '../components/TaskFormDialog';
 import { getYear, getMonth, getISOWeek, setISOWeek, startOfYear, eachWeekOfInterval, endOfMonth, startOfMonth, format } from 'date-fns';
@@ -18,7 +18,7 @@ import { es } from 'date-fns/locale';
 
 export default function Tasks() {
   const { user } = useAuth();
-  const { getAllTasks, toggleTaskStatus, imputations, taskTypes } = useData();
+  const { getAllTasks, toggleTaskStatus, imputations, taskTypes, deleteTask } = useData();
   const theme = useTheme();
 
   const [open, setOpen] = useState(false);
@@ -361,6 +361,19 @@ export default function Tasks() {
                                   {task.active ? <PowerSettingsNew /> : <PowerOff />}
                                 </IconButton>
                               )}
+                              <IconButton
+                                onClick={() => {
+                                  if (window.confirm('¿Estás seguro de eliminar esta tarea?')) {
+                                    deleteTask(task.id);
+                                  }
+                                }}
+                                disabled={taskImputations.length > 0}
+                                size="small"
+                                color="error"
+                                title={taskImputations.length > 0 ? "No se puede eliminar: tiene imputaciones" : "Eliminar tarea"}
+                              >
+                                <DeleteOutline />
+                              </IconButton>
                             </Box>
                           </TableCell>
                         </TableRow>
