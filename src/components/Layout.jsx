@@ -50,11 +50,11 @@ export default function Layout({ children }) {
     const drawer = (
         <div>
             <Toolbar sx={{ flexDirection: 'column', justifyContent: 'center', py: 2 }}>
-                <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                    GD Mapfre
+                <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold', color: 'primary.main', fontSize: '1rem' }}>
+                    Imputaciones GD Analistas
                 </Typography>
                 <Typography variant="caption" sx={{ fontStyle: 'italic', color: 'text.secondary', mt: 0.5 }}>
-                    Imputad malditos...
+                    Imputad malditos... v1.0
                 </Typography>
             </Toolbar>
             <Divider />
