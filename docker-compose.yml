@@ -11,6 +11,9 @@ services:
     depends_on:
       - mongo
     restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
 
   mongo:
     image: mongo:4.4
