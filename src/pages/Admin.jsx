@@ -11,9 +11,7 @@ import {
 import { Save, PersonAdd, School, VpnKey, DeleteOutline, Add, FileDownload, FileUpload } from '@mui/icons-material';
 
 function TaskTypesTab() {
-    const { taskTypes, updateTaskType, deleteTaskType, addTaskType } = useData();
-    const [openAdd, setOpenAdd] = useState(false);
-    const [newType, setNewType] = useState({ id: '', label: '', color: '#ffffff', structural: false });
+    const { taskTypes, updateTaskType, deleteTaskType } = useData();
 
     const handleColorChange = (id, newColor) => {
         updateTaskType(id, { color: newColor });
@@ -33,105 +31,8 @@ function TaskTypesTab() {
         }
     };
 
-    const handleCreateType = () => {
-        if (!newType.id || !newType.label) return;
-        addTaskType(newType);
-        setOpenAdd(false);
-        setNewType({ id: '', label: '', color: '#ffffff', structural: false });
-    };
-
-    const handleExport = () => {
-        const headers = ['id', 'label', 'color', 'structural', 'computesInWeek', 'subtractsFromBudget'];
-        const csvContent = [
-            headers.join(';'),
-            ...taskTypes.map(t => [
-                t.id,
-                `"${t.label}"`,
-                t.color,
-                t.structural,
-                t.computesInWeek,
-                t.subtractsFromBudget
-            ].join(';'))
-        ].join('\n');
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'tipos_tarea.csv';
-        link.click();
-    };
-
-    const handleImport = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const text = e.target.result;
-                const rows = text.split('\n').slice(1); // Skip header
-                let count = 0;
-                rows.forEach(row => {
-                    if (!row.trim()) return;
-
-                    const cols = row.split(';');
-                    if (cols.length < 2) return;
-
-                    // Clean quotes if present
-                    const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : '';
-
-                    const id = clean(cols[0]);
-                    const label = clean(cols[1]);
-                    if (!id) return;
-
-                    const typeData = {
-                        id: id,
-                        label: label,
-                        color: clean(cols[2]) || '#ffffff',
-                        structural: cols[3] === 'true',
-                        computesInWeek: cols[4] !== 'false',
-                        subtractsFromBudget: cols[5] !== 'false'
-                    };
-
-                    // Check if exists
-                    const exists = taskTypes.find(t => t.id === typeData.id);
-                    if (exists) {
-                        updateTaskType(typeData.id, typeData);
-                    } else {
-                        addTaskType(typeData);
-                    }
-                    count++;
-                });
-                alert(`Importación completada. Se procesaron ${count} tipos.`);
-            } catch (error) {
-                console.error(error);
-                alert('Error al procesar el archivo CSV.');
-            }
-            event.target.value = null; // Reset input
-        };
-        reader.readAsText(file);
-    };
-
     return (
-        <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Box>
-                    <Typography variant="h6" color="text.primary">Tipos de Tarea</Typography>
-                    <Typography variant="body2" color="text.secondary">Gestiona los tipos de tareas disponibles</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">
-                        Exportar
-                    </Button>
-                    <Button startIcon={<FileUpload />} component="label" color="inherit">
-                        Importar
-                        <input type="file" hidden accept=".csv" onChange={handleImport} />
-                    </Button>
-                    <Button variant="contained" startIcon={<Add />} onClick={() => setOpenAdd(true)}>
-                        Nuevo Tipo
-                    </Button>
-                </Box>
-            </Box>
+        <React.Fragment>
             <TableContainer component={Paper} variant="outlined" elevation={0}>
                 <Table size="small">
                     <TableHead sx={{ bgcolor: 'background.default' }}>
@@ -227,102 +128,7 @@ function TaskTypesTab() {
                 </Table>
             </TableContainer>
 
-            {/* Add Type Dialog */}
-            <Dialog open={openAdd} onClose={() => setOpenAdd(false)}>
-                <DialogTitle>Nuevo Tipo de Tarea</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, minWidth: 300 }}>
-                        <TextField
-                            required
-                            label="ID (Único, ej: VIAJE)"
-                            value={newType.id}
-                            onChange={(e) => setNewType({ ...newType, id: e.target.value.toUpperCase() })}
-                            fullWidth
-                            helperText="Debe ser único, sin espacios y en mayúsculas"
-                        />
-                        <TextField
-                            required
-                            label="Etiqueta"
-                            value={newType.label}
-                            onChange={(e) => setNewType({ ...newType, label: e.target.value })}
-                            fullWidth
-                        />
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Typography>Color:</Typography>
-                            <Box
-                                sx={{
-                                    width: 40,
-                                    height: 40,
-                                    bgcolor: newType.color,
-                                    border: '1px solid #ccc',
-                                    borderRadius: 1,
-                                    position: 'relative',
-                                    cursor: 'pointer',
-                                    overflow: 'hidden'
-                                }}
-                            >
-                                <input
-                                    type="color"
-                                    value={newType.color}
-                                    onChange={(e) => setNewType({ ...newType, color: e.target.value })}
-                                    style={{
-                                        position: 'absolute',
-                                        top: '-50%',
-                                        left: '-50%',
-                                        width: '200%',
-                                        height: '200%',
-                                        opacity: 0,
-                                        cursor: 'pointer'
-                                    }}
-                                />
-                            </Box>
-                            <Typography variant="caption" sx={{ fontFamily: 'monospace', bgcolor: 'grey.100', px: 1, borderRadius: 1 }}>
-                                {newType.color}
-                            </Typography>
-                        </Box>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={newType.computesInWeek !== false}
-                                    onChange={(e) => setNewType({ ...newType, computesInWeek: e.target.checked })}
-                                />
-                            }
-                            label="Computa en Total Semanal"
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={newType.subtractsFromBudget !== false}
-                                    onChange={(e) => setNewType({ ...newType, subtractsFromBudget: e.target.checked })}
-                                    color="warning"
-                                />
-                            }
-                            label="Resta UTES de la Tarea"
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={!!newType.structural}
-                                    onChange={(e) => setNewType({ ...newType, structural: e.target.checked })}
-                                    color="primary"
-                                />
-                            }
-                            label="Es Estructural (No se puede imputar directamente)"
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenAdd(false)}>Cancelar</Button>
-                    <Button
-                        onClick={handleCreateType}
-                        variant="contained"
-                        disabled={!newType.id || !newType.label}
-                    >
-                        Crear
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+        </React.Fragment>
     );
 }
 
@@ -602,17 +408,111 @@ function UsersTab() {
 }
 
 export default function Admin() {
+    const { taskTypes, updateTaskType, addTaskType } = useData();
     const [tabIndex, setTabIndex] = useState(0);
+
+    // State for New Type
+    const [openAdd, setOpenAdd] = useState(false);
+    const [newType, setNewType] = useState({ id: '', label: '', color: '#ffffff', structural: false });
 
     const handleTabChange = (event, newValue) => {
         setTabIndex(newValue);
     };
 
+    const handleCreateType = () => {
+        if (!newType.id || !newType.label) return;
+        addTaskType(newType);
+        setOpenAdd(false);
+        setNewType({ id: '', label: '', color: '#ffffff', structural: false });
+    };
+
+    const handleExport = () => {
+        const headers = ['id', 'label', 'color', 'structural', 'computesInWeek', 'subtractsFromBudget'];
+        const csvContent = [
+            headers.join(';'),
+            ...taskTypes.map(t => [
+                t.id,
+                `"${t.label}"`,
+                t.color,
+                t.structural,
+                t.computesInWeek,
+                t.subtractsFromBudget
+            ].join(';'))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'tipos_tarea.csv';
+        link.click();
+    };
+
+    const handleImport = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1);
+                let count = 0;
+                rows.forEach(row => {
+                    if (!row.trim()) return;
+                    const cols = row.split(';');
+                    if (cols.length < 2) return;
+                    const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : '';
+                    const id = clean(cols[0]);
+                    const label = clean(cols[1]);
+                    if (!id) return;
+                    const typeData = {
+                        id: id,
+                        label: label,
+                        color: clean(cols[2]) || '#ffffff',
+                        structural: cols[3] === 'true',
+                        computesInWeek: cols[4] !== 'false',
+                        subtractsFromBudget: cols[5] !== 'false'
+                    };
+                    const exists = taskTypes.find(t => t.id === typeData.id);
+                    if (exists) {
+                        updateTaskType(typeData.id, typeData);
+                    } else {
+                        addTaskType(typeData);
+                    }
+                    count++;
+                });
+                alert(`Importación completada. Se procesaron ${count} tipos.`);
+            } catch (error) {
+                console.error(error);
+                alert('Error al procesar el archivo CSV.');
+            }
+            event.target.value = null;
+        };
+        reader.readAsText(file);
+    };
+
     return (
         <Box>
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="h5" color="text.primary">Administración</Typography>
-                <Typography variant="body2" color="text.secondary">Panel de control global de la aplicación</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box>
+                    <Typography variant="h5" color="text.primary">Administración</Typography>
+                    <Typography variant="body2" color="text.secondary">Panel de control global de la aplicación</Typography>
+                </Box>
+
+                {tabIndex === 0 && (
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">
+                            Exportar
+                        </Button>
+                        <Button startIcon={<FileUpload />} component="label" color="inherit">
+                            Importar
+                            <input type="file" hidden accept=".csv" onChange={handleImport} />
+                        </Button>
+                        <Button variant="contained" startIcon={<Add />} onClick={() => setOpenAdd(true)}>
+                            Nuevo Tipo
+                        </Button>
+                    </Box>
+                )}
             </Box>
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
@@ -624,6 +524,57 @@ export default function Admin() {
 
             {tabIndex === 0 && <TaskTypesTab />}
             {tabIndex === 1 && <UsersTab />}
+
+            {/* Dialog for Add Type */}
+            <Dialog open={openAdd} onClose={() => setOpenAdd(false)}>
+                <DialogTitle>Nuevo Tipo de Tarea</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, minWidth: 300 }}>
+                        <TextField
+                            required
+                            label="ID (Único, ej: VIAJE)"
+                            value={newType.id}
+                            onChange={(e) => setNewType({ ...newType, id: e.target.value.toUpperCase() })}
+                            fullWidth
+                            helperText="Debe ser único, sin espacios y en mayúsculas"
+                        />
+                        <TextField
+                            required
+                            label="Etiqueta"
+                            value={newType.label}
+                            onChange={(e) => setNewType({ ...newType, label: e.target.value })}
+                            fullWidth
+                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography>Color:</Typography>
+                            <Box sx={{ width: 40, height: 40, bgcolor: newType.color, border: '1px solid #ccc', borderRadius: 1, position: 'relative', overflow: 'hidden' }}>
+                                <input
+                                    type="color"
+                                    value={newType.color}
+                                    onChange={(e) => setNewType({ ...newType, color: e.target.value })}
+                                    style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', opacity: 0, cursor: 'pointer' }}
+                                />
+                            </Box>
+                        </Box>
+                        <FormControlLabel
+                            control={<Switch checked={newType.computesInWeek !== false} onChange={(e) => setNewType({ ...newType, computesInWeek: e.target.checked })} />}
+                            label="Computa en Total Semanal"
+                        />
+                        <FormControlLabel
+                            control={<Switch checked={newType.subtractsFromBudget !== false} onChange={(e) => setNewType({ ...newType, subtractsFromBudget: e.target.checked })} color="warning" />}
+                            label="Resta UTES de la Tarea"
+                        />
+                        <FormControlLabel
+                            control={<Switch checked={!!newType.structural} onChange={(e) => setNewType({ ...newType, structural: e.target.checked })} color="primary" />}
+                            label="Es Estructural"
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenAdd(false)}>Cancelar</Button>
+                    <Button onClick={handleCreateType} variant="contained" disabled={!newType.id || !newType.label}>Crear</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }
