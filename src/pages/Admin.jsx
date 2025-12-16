@@ -114,17 +114,23 @@ function TaskTypesTab() {
 
     return (
         <Box>
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">
-                    Exportar CSV
-                </Button>
-                <Button startIcon={<FileUpload />} component="label" color="inherit">
-                    Importar CSV
-                    <input type="file" hidden accept=".csv" onChange={handleImport} />
-                </Button>
-                <Button variant="contained" startIcon={<Add />} onClick={() => setOpenAdd(true)}>
-                    Nuevo Tipo
-                </Button>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Box>
+                    <Typography variant="h6" color="text.primary">Tipos de Tarea</Typography>
+                    <Typography variant="body2" color="text.secondary">Gestiona los tipos de tareas disponibles</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">
+                        Exportar
+                    </Button>
+                    <Button startIcon={<FileUpload />} component="label" color="inherit">
+                        Importar
+                        <input type="file" hidden accept=".csv" onChange={handleImport} />
+                    </Button>
+                    <Button variant="contained" startIcon={<Add />} onClick={() => setOpenAdd(true)}>
+                        Nuevo Tipo
+                    </Button>
+                </Box>
             </Box>
             <TableContainer component={Paper} variant="outlined" elevation={0}>
                 <Table size="small">

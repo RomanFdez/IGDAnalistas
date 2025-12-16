@@ -238,7 +238,12 @@ export default function Tasks() {
           <Typography variant="body2" color="text.secondary">Administra tus tareas asignadas</Typography>
         </Box>
         {tabIndex === 0 && (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">Exportar</Button>
+            <Button startIcon={<FileUpload />} component="label" color="inherit">
+              Importar
+              <input type="file" hidden accept=".csv" onChange={handleImport} />
+            </Button>
             <Button
               variant="contained"
               startIcon={<Add />}
@@ -246,13 +251,6 @@ export default function Tasks() {
             >
               Nueva Tarea
             </Button>
-            <Box sx={{ ml: 2, display: 'inline-flex', gap: 1 }}>
-              <Button startIcon={<FileDownload />} onClick={handleExport} size="small">Exportar</Button>
-              <Button startIcon={<FileUpload />} component="label" size="small">
-                Importar
-                <input type="file" hidden accept=".csv" onChange={handleImport} />
-              </Button>
-            </Box>
           </Box>
         )}
       </Box>
