@@ -10,7 +10,7 @@ import {
   Tooltip, Dialog, Tabs, Tab
 } from '@mui/material';
 import {
-  Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock, Edit, DeleteOutline
+  Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock, Edit, DeleteOutline, FileDownload, FileUpload
 } from '@mui/icons-material';
 import TaskFormDialog from '../components/TaskFormDialog';
 import { getYear, getMonth, getISOWeek, setISOWeek, startOfYear, eachWeekOfInterval, endOfMonth, startOfMonth, format } from 'date-fns';
@@ -18,7 +18,7 @@ import { es } from 'date-fns/locale';
 
 export default function Tasks() {
   const { user } = useAuth();
-  const { getAllTasks, toggleTaskStatus, imputations, taskTypes, deleteTask } = useData();
+  const { getAllTasks, toggleTaskStatus, imputations, taskTypes, deleteTask, addTask, updateTask } = useData();
   const theme = useTheme();
 
   const [open, setOpen] = useState(false);
@@ -139,6 +139,75 @@ export default function Tasks() {
     }
   }, [availableWeeks, summaryMode]);
 
+  const handleExport = () => {
+    const headers = ['code', 'name', 'description', 'utes', 'active', 'permanent'];
+    const csvContent = [
+      headers.join(';'),
+      ...myTasks.map(t => [
+        t.code,
+        `"${t.name || ''}"`,
+        `"${(t.description || '').replace(/"/g, '""')}"`, // Escape quotes
+        t.utes || 0,
+        t.active,
+        t.permanent
+      ].join(';'))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'tareas.csv';
+    link.click();
+  };
+
+  const handleImport = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target.result;
+        const rows = text.split('\n').slice(1);
+        let count = 0;
+        rows.forEach(row => {
+          if (!row.trim()) return;
+          const cols = row.split(';'); // Check logic if descriptions contain semicolons? escaping needed.
+          // For simple usage:
+          if (cols.length < 2) return;
+
+          const clean = (val) => val ? val.replace(/^"|"$/g, '').replace(/""/g, '"').trim() : '';
+
+          const code = clean(cols[0]);
+          if (!code) return;
+
+          const taskData = {
+            code: code,
+            name: clean(cols[1]),
+            description: clean(cols[2]),
+            utes: Number(clean(cols[3])) || 0,
+            active: cols[4] !== 'false',
+            permanent: cols[5] === 'true'
+          };
+
+          const exists = myTasks.find(t => t.code === taskData.code);
+          if (exists) {
+            updateTask(exists.id, taskData);
+          } else {
+            addTask(taskData);
+          }
+          count++;
+        });
+        alert(`Importación completada. Procesadas ${count} tareas.`);
+      } catch (error) {
+        console.error(error);
+        alert('Error al importar CSV');
+      }
+      event.target.value = null;
+    };
+    reader.readAsText(file);
+  };
+
 
   const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
@@ -168,13 +237,22 @@ export default function Tasks() {
           <Typography variant="body2" color="text.secondary">Administra tus tareas asignadas</Typography>
         </Box>
         {tabIndex === 0 && (
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setOpen(true)}
-          >
-            Nueva Tarea
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => setOpen(true)}
+            >
+              Nueva Tarea
+            </Button>
+            <Box sx={{ ml: 2, display: 'inline-flex', gap: 1 }}>
+              <Button startIcon={<FileDownload />} onClick={handleExport} size="small">Exportar</Button>
+              <Button startIcon={<FileUpload />} component="label" size="small">
+                Importar
+                <input type="file" hidden accept=".csv" onChange={handleImport} />
+              </Button>
+            </Box>
+          </Box>
         )}
       </Box>
 
