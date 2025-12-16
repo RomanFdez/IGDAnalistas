@@ -263,7 +263,7 @@ const seedTaskTypes = async () => {
 
 const seedUsers = async () => {
     try {
-        const adminUser = await User.findOne({ name: 'Admin' });
+        let adminUser = await User.findOne({ name: 'Admin' });
         if (!adminUser) {
             const newUser = new User({
                 id: 'admin-user',
@@ -274,6 +274,13 @@ const seedUsers = async () => {
             });
             await newUser.save();
             console.log('✅ Seeded Default Admin User');
+        } else {
+            // Update existing Admin if roles are missing (fix for deployment)
+            if (!adminUser.roles || !adminUser.roles.includes('APPROVER')) {
+                adminUser.roles = ['APPROVER'];
+                await adminUser.save();
+                console.log('🔄 Updated Admin User roles to APPROVER');
+            }
         }
     } catch (err) {
         console.error('❌ Error seeding users:', err);
