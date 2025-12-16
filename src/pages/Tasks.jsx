@@ -561,15 +561,15 @@ export default function Tasks() {
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
+                            label={({ cx, cy, midAngle, innerRadius, outerRadius, value, name }) => {
                               const RADIAN = Math.PI / 180;
                               const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                               const x = cx + radius * Math.cos(-midAngle * RADIAN);
                               const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-                              const text = `${value}h`;
-                              const width = text.length * 8 + 12;
-                              const height = 24;
+                              const valText = `${value}h`;
+                              const width = Math.max(name.length * 7, valText.length * 8) + 16;
+                              const height = 34;
 
                               return (
                                 <g>
@@ -581,9 +581,13 @@ export default function Tasks() {
                                     fill="#f5f5f5"
                                     rx={4}
                                     stroke="#e0e0e0"
+                                    fillOpacity={0.9}
                                   />
-                                  <text x={x} y={y} fill="black" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '12px', fontWeight: 'bold' }}>
-                                    {text}
+                                  <text x={x} y={y - 5} fill="#444" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '11px' }}>
+                                    {name}
+                                  </text>
+                                  <text x={x} y={y + 9} fill="black" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                                    {valText}
                                   </text>
                                 </g>
                               );
