@@ -62,10 +62,10 @@ export default function Login() {
                 >
                     <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" component="h1" color="primary" fontWeight="bold">
-                            GD Mapfre
+                            Imputad malditos...
                         </Typography>
                         <Typography variant="subtitle1" color="text.secondary">
-                            Portal de Imputaciones
+                            Portal de Imputaciones v1.0
                         </Typography>
                     </Box>
 
