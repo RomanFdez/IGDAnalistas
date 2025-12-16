@@ -457,9 +457,10 @@ export default function Statistics() {
 
     return (
         <Box>
-            <Typography variant="h4" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
-                Estadísticas
-            </Typography>
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h5" color="text.primary">Estadísticas</Typography>
+                <Typography variant="body2" color="text.secondary">Análisis visual de las imputaciones</Typography>
+            </Box>
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                 <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)}>
