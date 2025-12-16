@@ -78,7 +78,9 @@ export const AuthProvider = ({ children }) => {
         if (isApprover) roles.push('APPROVER');
 
         const newUser = {
-            id: crypto.randomUUID(),
+            id: (typeof crypto !== 'undefined' && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : `u-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
             name: `${name} ${surname}`,
             roles,
             active: true,
