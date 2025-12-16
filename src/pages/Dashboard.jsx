@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import {
-    ChevronLeft, ChevronRight, Lock, LockOpen, Add, DeleteOutline, AddCircleOutline, Search, InfoOutlined
+    ChevronLeft, ChevronRight, Lock, LockOpen, Add, DeleteOutline, AddCircleOutline, Search, InfoOutlined, FileDownload, FileUpload
 } from '@mui/icons-material';
 
 import TaskFormDialog from '../components/TaskFormDialog';
@@ -52,6 +52,122 @@ export default function Dashboard() {
 
     const handlePrevWeek = () => setCurrentWeekStart(d => subWeeks(d, 1));
     const handleNextWeek = () => setCurrentWeekStart(d => addWeeks(d, 1));
+
+    const handleExport = () => {
+        const userImputations = imputations.filter(i => i.userId === user.id);
+        const headers = ['Semana', 'CodigoTarea', 'Tipo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Seguimiento'];
+        const csvContent = [
+            headers.join(';'),
+            ...userImputations.map(imp => {
+                const task = tasks.find(t => t.id === imp.taskId);
+                return [
+                    imp.weekId,
+                    task ? task.code : 'UNKNOWN',
+                    imp.type,
+                    imp.hours.mon,
+                    imp.hours.tue,
+                    imp.hours.wed,
+                    imp.hours.thu,
+                    imp.hours.fri,
+                    imp.seg ? 'SI' : 'NO'
+                ].join(';');
+            })
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `imputaciones_${user.name.replace(/\s+/g, '_')}.csv`;
+        link.click();
+    };
+
+    const handleImport = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1);
+                let count = 0;
+
+                for (const row of rows) {
+                    if (!row.trim()) continue;
+                    const cols = row.split(';');
+                    if (cols.length < 3) continue;
+
+                    const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : '';
+
+                    const week = clean(cols[0]);
+                    const taskCode = clean(cols[1]);
+                    const typeId = clean(cols[2]);
+
+                    if (!week || !taskCode || !typeId) continue;
+
+                    // 1. Find Task
+                    const task = tasks.find(t => t.code === taskCode);
+                    if (!task) {
+                        console.warn(`Tarea desconocida: ${taskCode}`);
+                        continue;
+                    }
+
+                    // 2. Validate Lock
+                    if (isWeekLocked(week)) {
+                        console.warn(`Semana bloqueada: ${week}`);
+                        continue;
+                    }
+
+                    // 3. Construct Data
+                    const imputationData = {
+                        weekId: week,
+                        taskId: task.id,
+                        userId: user.id,
+                        type: typeId,
+                        hours: {
+                            mon: parseFloat(clean(cols[3])) || 0,
+                            tue: parseFloat(clean(cols[4])) || 0,
+                            wed: parseFloat(clean(cols[5])) || 0,
+                            thu: parseFloat(clean(cols[6])) || 0,
+                            fri: parseFloat(clean(cols[7])) || 0
+                        },
+                        seg: clean(cols[8]).toUpperCase() === 'SI' || clean(cols[8]).toUpperCase() === 'TRUE',
+                        status: 'DRAFT'
+                    };
+
+                    // 4. Upsert
+                    // Constraint: Check if already exists to keep ID?
+                    // addOrUpdateImputation handles logic but often requires ID for update.
+                    // If no ID provided, it might create duplicate if backend doesn't check unique(week, user, task, type).
+                    // The DataContext `addOrUpdateImputation` likely checks availability?
+                    // Let's check logic: It's typically: "If ID exists, update. Else create."
+                    // But here we don't have ID.
+                    // We must find existing imputation for this key.
+
+                    const existing = imputations.find(i =>
+                        i.userId === user.id &&
+                        i.weekId === week &&
+                        i.taskId === task.id &&
+                        i.type === typeId
+                    );
+
+                    if (existing) {
+                        await addOrUpdateImputation({ ...imputationData, id: existing.id });
+                    } else {
+                        await addOrUpdateImputation(imputationData);
+                    }
+                    count++;
+                }
+                alert(`Importación completada. Se procesaron/actualizaron ${count} registros.`);
+                // Refresh? Context updates should trigger re-render.
+            } catch (error) {
+                console.error(error);
+                alert('Error al procesar el archivo CSV.');
+            }
+            event.target.value = null;
+        };
+        reader.readAsText(file);
+    };
 
     const handleAddRow = () => {
         if (!selectedTaskId) return;
@@ -160,9 +276,20 @@ export default function Dashboard() {
     return (
         <Box>
             {/* Page Header */}
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="h5" color="text.primary">Hoja de Tiempo</Typography>
-                <Typography variant="body2" color="text.secondary">Registra y gestiona tus imputaciones semanales</Typography>
+            <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                    <Typography variant="h5" color="text.primary">Hoja de Tiempo</Typography>
+                    <Typography variant="body2" color="text.secondary">Registra y gestiona tus imputaciones semanales</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">
+                        Exportar
+                    </Button>
+                    <Button startIcon={<FileUpload />} component="label" color="inherit">
+                        Importar
+                        <input type="file" hidden accept=".csv" onChange={handleImport} />
+                    </Button>
+                </Box>
             </Box>
 
             {/* Week Navigation */}
