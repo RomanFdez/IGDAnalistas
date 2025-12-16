@@ -159,7 +159,13 @@ export default function Dashboard() {
 
     return (
         <Box>
-            {/* Header */}
+            {/* Page Header */}
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h5" color="text.primary">Hoja de Tiempo</Typography>
+                <Typography variant="body2" color="text.secondary">Registra y gestiona tus imputaciones semanales</Typography>
+            </Box>
+
+            {/* Week Navigation */}
             <Paper elevation={0} variant="outlined" sx={{ p: 2, mb: 3, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <IconButton onClick={handlePrevWeek} size="small" sx={{ border: '1px solid #ddd' }}><ChevronLeft /></IconButton>

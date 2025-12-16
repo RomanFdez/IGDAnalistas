@@ -610,10 +610,10 @@ export default function Admin() {
 
     return (
         <Box>
-            <Typography variant="h5" color="text.primary" sx={{ mb: 1 }}>Administración</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Panel de control global de la aplicación.
-            </Typography>
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h5" color="text.primary">Administración</Typography>
+                <Typography variant="body2" color="text.secondary">Panel de control global de la aplicación</Typography>
+            </Box>
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                 <Tabs value={tabIndex} onChange={handleTabChange}>

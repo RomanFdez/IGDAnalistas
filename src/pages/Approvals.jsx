@@ -208,7 +208,7 @@ export default function Approvals() {
         <Box sx={{ animate: 'fade-in' }}>
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: 'center', mb: 3, gap: 2 }}>
                 <Box>
-                    <Typography variant="h5" fontWeight="bold">Aprobaciones</Typography>
+                    <Typography variant="h5" color="text.primary">Aprobaciones</Typography>
                     <Typography variant="body2" color="text.secondary">Revisión y cierre de semanas</Typography>
                 </Box>
 
