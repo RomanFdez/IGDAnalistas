@@ -567,10 +567,25 @@ export default function Tasks() {
                               const x = cx + radius * Math.cos(-midAngle * RADIAN);
                               const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
+                              const text = `${value}h`;
+                              const width = text.length * 8 + 12;
+                              const height = 24;
+
                               return (
-                                <text x={x} y={y} fill="black" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '12px', fontWeight: 'bold' }}>
-                                  {value}h
-                                </text>
+                                <g>
+                                  <rect
+                                    x={x - width / 2}
+                                    y={y - height / 2}
+                                    width={width}
+                                    height={height}
+                                    fill="#f5f5f5"
+                                    rx={4}
+                                    stroke="#e0e0e0"
+                                  />
+                                  <text x={x} y={y} fill="black" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                                    {text}
+                                  </text>
+                                </g>
                               );
                             }}
                             outerRadius={120}
