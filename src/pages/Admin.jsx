@@ -148,13 +148,15 @@ function TaskTypesTab() {
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, minWidth: 300 }}>
                         <TextField
+                            required
                             label="ID (Único, ej: VIAJE)"
                             value={newType.id}
                             onChange={(e) => setNewType({ ...newType, id: e.target.value.toUpperCase() })}
                             fullWidth
-                            helperText="Debe ser único y sin espacios"
+                            helperText="Debe ser único, sin espacios y en mayúsculas"
                         />
                         <TextField
+                            required
                             label="Etiqueta"
                             value={newType.label}
                             onChange={(e) => setNewType({ ...newType, label: e.target.value })}
