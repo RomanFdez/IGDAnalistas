@@ -8,7 +8,7 @@ import {
     Tabs, Tab, Grid, TextField, Button, Divider, Chip, FormControlLabel, Tooltip,
     Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
-import { Save, PersonAdd, School, VpnKey, DeleteOutline, Add } from '@mui/icons-material';
+import { Save, PersonAdd, School, VpnKey, DeleteOutline, Add, FileDownload, FileUpload } from '@mui/icons-material';
 
 function TaskTypesTab() {
     const { taskTypes, updateTaskType, deleteTaskType, addTaskType } = useData();
@@ -40,9 +40,87 @@ function TaskTypesTab() {
         setNewType({ id: '', label: '', color: '#ffffff', structural: false });
     };
 
+    const handleExport = () => {
+        const headers = ['id', 'label', 'color', 'structural', 'computesInWeek', 'subtractsFromBudget'];
+        const csvContent = [
+            headers.join(','),
+            ...taskTypes.map(t => [
+                t.id,
+                `"${t.label}"`,
+                t.color,
+                t.structural,
+                t.computesInWeek,
+                t.subtractsFromBudget
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'tipos_tarea.csv';
+        link.click();
+    };
+
+    const handleImport = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const text = e.target.result;
+                const rows = text.split('\n').slice(1); // Skip header
+                let count = 0;
+                rows.forEach(row => {
+                    // Simple CSV parser handling quoted strings
+                    const cols = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(',');
+                    if (cols.length < 2) return;
+
+                    // Clean quotes if present
+                    const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : '';
+
+                    const id = clean(cols[0]);
+                    const label = clean(cols[1]);
+                    if (!id) return;
+
+                    const typeData = {
+                        id: id,
+                        label: label,
+                        color: clean(cols[2]) || '#ffffff',
+                        structural: cols[3] === 'true',
+                        computesInWeek: cols[4] !== 'false',
+                        subtractsFromBudget: cols[5] !== 'false'
+                    };
+
+                    // Check if exists
+                    const exists = taskTypes.find(t => t.id === typeData.id);
+                    if (exists) {
+                        updateTaskType(typeData.id, typeData);
+                    } else {
+                        addTaskType(typeData);
+                    }
+                    count++;
+                });
+                alert(`Importación completada. Se procesaron ${count} tipos.`);
+            } catch (error) {
+                console.error(error);
+                alert('Error al procesar el archivo CSV.');
+            }
+            event.target.value = null; // Reset input
+        };
+        reader.readAsText(file);
+    };
+
     return (
         <Box>
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">
+                    Exportar CSV
+                </Button>
+                <Button startIcon={<FileUpload />} component="label" color="inherit">
+                    Importar CSV
+                    <input type="file" hidden accept=".csv" onChange={handleImport} />
+                </Button>
                 <Button variant="contained" startIcon={<Add />} onClick={() => setOpenAdd(true)}>
                     Nuevo Tipo
                 </Button>
