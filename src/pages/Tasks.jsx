@@ -15,6 +15,7 @@ import {
 import TaskFormDialog from '../components/TaskFormDialog';
 import { getYear, getMonth, getISOWeek, setISOWeek, startOfYear, eachWeekOfInterval, endOfMonth, startOfMonth, format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
 export default function Tasks() {
   const { user } = useAuth();
@@ -540,27 +541,42 @@ export default function Tasks() {
 
                 <Divider sx={{ mb: 2 }} />
 
-                <Table size="small">
-                  <TableBody>
-                    {taskTypes.map(type => {
-                      const total = summaryData[type.id] || 0;
-                      if (total === 0) return null;
-                      return (
-                        <TableRow key={type.id} sx={{ bgcolor: type.color || theme.palette.taskTypes?.[type.id] }}>
-                          <TableCell sx={{ fontWeight: 'medium' }}>{type.label}</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 'bold' }}>{total}h</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {Object.values(summaryData).every(v => v === 0) && (
-                      <TableRow>
-                        <TableCell colSpan={2} align="center" sx={{ color: 'text.secondary' }}>
-                          Sin datos para el filtro seleccionado.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                <Box sx={{ height: 350, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  {(() => {
+                    const chartData = taskTypes.map(type => ({
+                      name: type.label,
+                      value: summaryData[type.id] || 0,
+                      color: type.color || '#ccc'
+                    })).filter(d => d.value > 0);
+
+                    if (chartData.length === 0) {
+                      return <Typography color="text.secondary">Sin datos para mostrar.</Typography>;
+                    }
+
+                    return (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={chartData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            outerRadius={120}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {chartData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} stroke="#fff" />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip formatter={(value) => `${value}h`} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
+                </Box>
 
               </CardContent>
             </Card>
