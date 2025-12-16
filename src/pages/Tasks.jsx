@@ -555,42 +555,14 @@ export default function Tasks() {
 
                     return (
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%' }}>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <PieChart>
+                        <ResponsiveContainer width="100%" height={350}>
+                          <PieChart margin={{ top: 20, bottom: 20 }}>
                             <Pie
                               data={chartData}
                               cx="50%"
                               cy="50%"
-                              labelLine={false}
-                              label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
-                                const RADIAN = Math.PI / 180;
-                                const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-                                const text = `${value}h`;
-                                const width = text.length * 8 + 12;
-                                const height = 24;
-
-                                return (
-                                  <g>
-                                    <rect
-                                      x={x - width / 2}
-                                      y={y - height / 2}
-                                      width={width}
-                                      height={height}
-                                      fill="#f5f5f5"
-                                      rx={4}
-                                      stroke="#e0e0e0"
-                                      fillOpacity={0.9}
-                                    />
-                                    <text x={x} y={y} fill="black" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '12px', fontWeight: 'bold' }}>
-                                      {text}
-                                    </text>
-                                  </g>
-                                );
-                              }}
-                              outerRadius={100}
+                              label={({ value }) => `${value}h`}
+                              outerRadius={110}
                               fill="#8884d8"
                               dataKey="value"
                             >
@@ -602,7 +574,7 @@ export default function Tasks() {
                           </PieChart>
                         </ResponsiveContainer>
 
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2, mt: 2, px: 2 }}>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2, mt: 0, px: 2 }}>
                           {chartData.map((entry, index) => (
                             <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Box sx={{ width: 14, height: 14, bgcolor: entry.color, borderRadius: 1, border: '1px solid rgba(0,0,0,0.2)' }} />
