@@ -137,6 +137,7 @@ function UsersTab() {
     const [newName, setNewName] = useState('');
     const [newSurname, setNewSurname] = useState('');
     const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
     const [isApprover, setIsApprover] = useState(false);
 
     // Edit State
@@ -148,13 +149,28 @@ function UsersTab() {
 
     const handleAddUser = (e) => {
         e.preventDefault();
-        if (newName.trim() && newSurname.trim() && newPassword.trim()) {
-            addUser(newName, newSurname, newPassword, isApprover);
-            setNewName('');
-            setNewSurname('');
-            setNewPassword('');
-            setIsApprover(false);
+        
+        if (!newName.trim() || !newSurname.trim() || !newPassword.trim()) {
+             return;
         }
+
+        if (newPassword !== confirmNewPassword) {
+            alert('Las contraseñas no coinciden');
+            return;
+        }
+
+        // Password complexity check: At least 1 Uppercase and 1 Number
+        if (!/(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+            alert('La contraseña debe contener al menos una letra mayúscula y un número.');
+            return;
+        }
+
+        addUser(newName, newSurname, newPassword, isApprover);
+        setNewName('');
+        setNewSurname('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+        setIsApprover(false);
     };
 
     const handleToggleApprover = (userId, currentRoles) => {
@@ -270,6 +286,17 @@ function UsersTab() {
                                 fullWidth
                                 type="password"
                             />
+                            <TextField
+                                label="Confirmar Contraseña"
+                                value={confirmNewPassword}
+                                onChange={e => setConfirmNewPassword(e.target.value)}
+                                size="small"
+                                required
+                                fullWidth
+                                type="password"
+                                error={!!newPassword && !!confirmNewPassword && newPassword !== confirmNewPassword}
+                                helperText={!!newPassword && !!confirmNewPassword && newPassword !== confirmNewPassword ? 'Las contraseñas no coinciden' : ''}
+                            />
                             <FormControlLabel
                                 control={
                                     <Checkbox
@@ -282,7 +309,7 @@ function UsersTab() {
                             <Button
                                 type="submit"
                                 variant="contained"
-                                disabled={!newName || !newSurname || !newPassword}
+                                disabled={!newName || !newSurname || !newPassword || !confirmNewPassword}
                             >
                                 Crear Usuario
                             </Button>
