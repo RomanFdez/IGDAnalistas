@@ -181,3 +181,21 @@
   computesInWeek: true,
   subtractsFromBudget: false
 }
+[PUT TaskType] Updating TEST with: {
+  id: 'TEST',
+  label: 'cambiado',
+  color: '#E8F5E9',
+  structural: false,
+  computesInWeek: true,
+  subtractsFromBudget: true
+}
+[PUT TaskType] Result: {
+  _id: new ObjectId('694189db14ff1c2313aef283'),
+  id: 'TEST',
+  label: 'cambiado',
+  color: '#E8F5E9',
+  structural: false,
+  computesInWeek: true,
+  subtractsFromBudget: true,
+  __v: 0
+}
