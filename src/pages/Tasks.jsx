@@ -561,7 +561,11 @@ export default function Tasks() {
                               data={chartData}
                               cx="50%"
                               cy="50%"
-                              label={({ value }) => `${value}h`}
+                              label={({ cx, x, y, value }) => (
+                                <text x={x} y={y} fill="black" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+                                  {value}h
+                                </text>
+                              )}
                               outerRadius={110}
                               fill="#8884d8"
                               dataKey="value"
