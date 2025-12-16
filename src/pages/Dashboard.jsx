@@ -182,21 +182,19 @@ export default function Dashboard() {
                         <Chip icon={<Lock />} label="Semana Bloqueada" color="error" variant="outlined" />
                     )}
 
-                    <Button
-                        startIcon={<Add />}
-                        onClick={() => setOpenTaskDialog(true)}
-                        variant="outlined"
-                        size="small"
-                        sx={{ mr: 2, borderRadius: 2 }}
-                    >
-                        Nueva Tarea
-                    </Button>
+
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.5, border: '1px solid #ddd', borderRadius: 2, bgcolor: 'background.default' }}>
                         {myTasks.length > 0 ? (
                             <Select
                                 value={selectedTaskId}
-                                onChange={e => setSelectedTaskId(e.target.value)}
+                                onChange={e => {
+                                    if (e.target.value === 'NEW_TASK') {
+                                        setOpenTaskDialog(true);
+                                    } else {
+                                        setSelectedTaskId(e.target.value);
+                                    }
+                                }}
                                 disabled={isLocked}
                                 displayEmpty
                                 variant="standard"
@@ -204,6 +202,9 @@ export default function Dashboard() {
                                 sx={{ minWidth: 200, px: 2, fontSize: '0.875rem' }}
                             >
                                 <MenuItem value=""><em>Seleccionar Tarea para Imputar...</em></MenuItem>
+                                <MenuItem value="NEW_TASK" sx={{ color: 'primary.main', fontWeight: 'bold', borderBottom: '1px solid #eee' }}>
+                                    <Add fontSize="small" sx={{ mr: 1 }} /> Nueva Tarea
+                                </MenuItem>
                                 {myTasks.map(t => <MenuItem key={t.id} value={t.id}>{t.code} - {t.name}</MenuItem>)}
                             </Select>
                         ) : (
@@ -227,9 +228,10 @@ export default function Dashboard() {
             <TaskFormDialog
                 open={openTaskDialog}
                 onClose={() => setOpenTaskDialog(false)}
-                onTaskCreated={() => {
-                    // Optional: Select the new task automatically? 
-                    // For now just close, user will see it in list.
+                onTaskCreated={(newTask) => {
+                    if (newTask && newTask.id) {
+                        setSelectedTaskId(newTask.id);
+                    }
                 }}
             />
 

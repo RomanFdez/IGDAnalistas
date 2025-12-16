@@ -28,7 +28,7 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
     const [codeError, setCodeError] = useState(false);
     const [nameError, setNameError] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         let hasError = false;
@@ -59,14 +59,16 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
                 description: newDesc,
                 utes: newUtes ? Number(newUtes) : 0
             });
+            if (onTaskCreated) onTaskCreated(taskToEdit);
         } else {
             // Create task (helper in DataContext assigns user)
-            addTask({
+            const createdTask = await addTask({
                 code: newCode,
                 name: newName,
                 description: newDesc,
                 utes: newUtes ? Number(newUtes) : 0
             });
+            if (onTaskCreated) onTaskCreated(createdTask);
         }
 
         // Reset form
@@ -74,9 +76,6 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
         setNewName('');
         setNewDesc('');
         setNewUtes('');
-
-        // Notify parent
-        if (onTaskCreated) onTaskCreated();
 
         onClose();
     };

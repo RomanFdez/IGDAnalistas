@@ -21,7 +21,7 @@ const DEFAULT_TASK_TYPES = [
 ];
 
 const generateUUID = () => {
-    return (typeof crypto !== 'undefined' && crypto.randomUUID)
+    return (typeof crypto !== '' && crypto.randomUUID)
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 };
@@ -72,6 +72,7 @@ export const DataProvider = ({ children }) => {
         } catch (error) {
             console.error("Error creating task:", error);
         }
+        return taskWithId;
     };
 
     const updateTaskAssignee = async (taskId, userId) => {
