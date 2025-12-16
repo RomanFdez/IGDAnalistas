@@ -554,56 +554,63 @@ export default function Tasks() {
                     }
 
                     return (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={chartData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ cx, cy, midAngle, innerRadius, outerRadius, value, name }) => {
-                              const RADIAN = Math.PI / 180;
-                              const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                              const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%' }}>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={chartData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
+                                const RADIAN = Math.PI / 180;
+                                const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-                              const valText = `${value}h`;
-                              const width = Math.max(name.length * 7, valText.length * 8) + 16;
-                              const height = 34;
+                                const text = `${value}h`;
+                                const width = text.length * 8 + 12;
+                                const height = 24;
 
-                              return (
-                                <g>
-                                  <rect
-                                    x={x - width / 2}
-                                    y={y - height / 2}
-                                    width={width}
-                                    height={height}
-                                    fill="#f5f5f5"
-                                    rx={4}
-                                    stroke="#e0e0e0"
-                                    fillOpacity={0.9}
-                                  />
-                                  <text x={x} y={y - 5} fill="#444" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '11px' }}>
-                                    {name}
-                                  </text>
-                                  <text x={x} y={y + 9} fill="black" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '12px', fontWeight: 'bold' }}>
-                                    {valText}
-                                  </text>
-                                </g>
-                              );
-                            }}
-                            outerRadius={120}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {chartData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} stroke="#fff" />
-                            ))}
-                          </Pie>
-                          <RechartsTooltip formatter={(value) => `${value}h`} />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
+                                return (
+                                  <g>
+                                    <rect
+                                      x={x - width / 2}
+                                      y={y - height / 2}
+                                      width={width}
+                                      height={height}
+                                      fill="#f5f5f5"
+                                      rx={4}
+                                      stroke="#e0e0e0"
+                                      fillOpacity={0.9}
+                                    />
+                                    <text x={x} y={y} fill="black" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                                      {text}
+                                    </text>
+                                  </g>
+                                );
+                              }}
+                              outerRadius={100}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {chartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} stroke="#fff" />
+                              ))}
+                            </Pie>
+                            <RechartsTooltip formatter={(value) => `${value}h`} />
+                          </PieChart>
+                        </ResponsiveContainer>
+
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 2, mt: 2, px: 2 }}>
+                          {chartData.map((entry, index) => (
+                            <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ width: 14, height: 14, bgcolor: entry.color, borderRadius: 1, border: '1px solid rgba(0,0,0,0.2)' }} />
+                              <Typography variant="body2" color="text.primary">{entry.name}</Typography>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
                     );
                   })()}
                 </Box>
