@@ -211,6 +211,7 @@ function MonthlyStatsTab() {
     const currentYear = new Date().getFullYear();
     const [year, setYear] = useState(currentYear);
     const [disabledTypes, setDisabledTypes] = useState([]); // Array of IDs to exclude
+    const [segFilter, setSegFilter] = useState('ALL'); // 'ALL', 'SEG', 'NO_SEG'
 
     const toggleType = (id) => {
         setDisabledTypes(prev =>
@@ -229,7 +230,15 @@ function MonthlyStatsTab() {
 
         const filteredImps = imputations.filter(imp => {
             const { year: impYear } = parseWeekId(imp.weekId);
-            return impYear === year;
+
+            // Year Filter
+            if (impYear !== year) return false;
+
+            // SEG Filter
+            if (segFilter === 'SEG' && !imp.seg) return false;
+            if (segFilter === 'NO_SEG' && imp.seg) return false;
+
+            return true;
         });
 
         filteredImps.forEach(imp => {
@@ -245,22 +254,87 @@ function MonthlyStatsTab() {
         });
 
         return rows;
-    }, [imputations, taskTypes, year]);
+    }, [imputations, taskTypes, year, segFilter]);
 
-    // Calculate Column Totals
-    const columnTotals = useMemo(() => {
-        const totals = Array(12).fill(0);
-        let grandTotal = 0;
-        matrixData.forEach(row => {
-            if (disabledTypes.includes(row.id)) return; // Exclude disabled
+    // Helper to get total for a set of IDs in a specific month index
+    const getMonthSum = (monthIdx, ids) => {
+        return ids.reduce((acc, id) => {
+            const row = matrixData.find(r => r.id === id);
+            return acc + (row?.months[monthIdx] || 0);
+        }, 0);
+    };
 
-            row.months.forEach((val, idx) => {
-                totals[idx] += val;
-            });
-            grandTotal += row.total;
+    // Helper to get row object for a specific ID
+    const getRow = (id) => matrixData.find(r => r.id === id);
+
+    // Calculate Summary Rows
+    const summaryRows = useMemo(() => {
+        const months = Array.from({ length: 12 }, (_, i) => i);
+
+        // 1. UTES a facturar
+        const row1 = months.map(i => getMonthSum(i, ['TRABAJADO', 'JIRA', 'PRE_IMPUTADO', 'REGULARIZADO', 'RECUPERADO']));
+
+        // 2. Pérdida facturación (SIN_PROYECTO + ENFERMEDAD - RECUPERADO)
+        const row2 = months.map(i => {
+            const sum = getMonthSum(i, ['SIN_PROYECTO', 'ENFERMEDAD']);
+            const rec = getMonthSum(i, ['RECUPERADO']);
+            return sum - rec;
         });
-        return { months: totals, total: grandTotal };
-    }, [matrixData, disabledTypes]);
+
+        // 3. Eficiencia del servicio %
+        const row3 = months.map((_, i) => {
+            const r1 = row1[i];
+            const r2 = row2[i];
+            const denom = r1 + r2;
+            return denom === 0 ? 0 : (r1 / denom) * 100;
+        });
+
+        // 4. Pendientes Serv. Acumulado
+        const row4 = [];
+        let acc4 = 0;
+        months.forEach(i => {
+            const pen = getMonthSum(i, ['PENDIENTE']);
+            const reg = getMonthSum(i, ['REGULARIZADO']);
+            const val = pen - reg;
+            acc4 += val;
+            row4.push(acc4);
+        });
+
+        // 5. Preimputado Serv. Acumulado
+        const row5 = [];
+        let acc5 = 0;
+        months.forEach(i => {
+            const pre = getMonthSum(i, ['PRE_IMPUTADO']);
+            const ya = getMonthSum(i, ['YA_IMPUTADO']);
+            const val = pre - ya;
+            acc5 += val;
+            row5.push(acc5);
+        });
+
+        // 6. Realmente Trabajadas
+        const row6 = months.map(i => getMonthSum(i, ['TRABAJADO', 'JIRA', 'REGULARIZADO', 'RECUPERADO', 'YA_IMPUTADO']));
+
+        return { row1, row2, row3, row4, row5, row6 };
+    }, [matrixData]);
+
+    // Calculate Horizontal Totals for Summary Rows (where applicable)
+    // For accumulated rows (4 & 5), the "Total" column typically shows the final value or sum? 
+    // Standard interpretation for "Acumulado" tables: The last column usually shows the *current* accumulated status, 
+    // but the table has a "Total" column. 
+    // Let's assume the "Total" column for accumulated rows should show the final accumulated value (Dec).
+    // For others (SUM), it's the sum of the year.
+    // For Efficiency, it's the efficiency of the totals.
+
+    const summaryTotals = useMemo(() => {
+        const r1Total = summaryRows.row1.reduce((a, b) => a + b, 0);
+        const r2Total = summaryRows.row2.reduce((a, b) => a + b, 0);
+        const r3Total = (r1Total + r2Total) === 0 ? 0 : (r1Total / (r1Total + r2Total)) * 100;
+        const r4Total = summaryRows.row4[11]; // Final value
+        const r5Total = summaryRows.row5[11]; // Final value
+        const r6Total = summaryRows.row6.reduce((a, b) => a + b, 0);
+
+        return { r1Total, r2Total, r3Total, r4Total, r5Total, r6Total };
+    }, [summaryRows]);
 
     return (
         <Box>
@@ -273,6 +347,16 @@ function MonthlyStatsTab() {
                                 <MenuItem value={2023}>2023</MenuItem>
                                 <MenuItem value={2024}>2024</MenuItem>
                                 <MenuItem value={2025}>2025</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Filtro SEG</InputLabel>
+                            <Select value={segFilter} label="Filtro SEG" onChange={(e) => setSegFilter(e.target.value)}>
+                                <MenuItem value="ALL">Todos</MenuItem>
+                                <MenuItem value="SEG">Solo SEG</MenuItem>
+                                <MenuItem value="NO_SEG">No SEG</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
@@ -315,18 +399,52 @@ function MonthlyStatsTab() {
                                 </TableRow>
                             );
                         })}
-                        {/* Totals Row */}
-                        <TableRow sx={{ bgcolor: 'grey.100' }}>
-                            <TableCell sx={{ fontWeight: 'bold' }}>TOTAL ESTADÍSTICO</TableCell>
-                            {columnTotals.months.map((val, idx) => (
-                                <TableCell key={idx} align="center" sx={{ fontWeight: 'bold' }}>
-                                    {val > 0 ? val : '-'}
-                                </TableCell>
-                            ))}
-                            <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'grey.300', fontSize: '1.05rem' }}>
-                                {columnTotals.total}
-                            </TableCell>
+
+                        {/* Summary Rows Divider */}
+                        <TableRow><TableCell colSpan={14} sx={{ bgcolor: 'divider', height: '2px', p: 0 }} /></TableRow>
+
+                        {/* 1. UTES a facturar */}
+                        <TableRow sx={{ bgcolor: 'grey.50' }}>
+                            <TableCell sx={{ fontWeight: 'bold' }}>UTES a facturar</TableCell>
+                            {summaryRows.row1.map((val, i) => <TableCell key={i} align="center">{val > 0 ? val : '-'}</TableCell>)}
+                            <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'grey.200' }}>{summaryTotals.r1Total}</TableCell>
                         </TableRow>
+
+                        {/* 2. Pérdida facturación */}
+                        <TableRow sx={{ bgcolor: 'grey.50' }}>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Pérdida facturación</TableCell>
+                            {summaryRows.row2.map((val, i) => <TableCell key={i} align="center">{val !== 0 ? val : '-'}</TableCell>)}
+                            <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'grey.200' }}>{summaryTotals.r2Total}</TableCell>
+                        </TableRow>
+
+                        {/* 3. Eficiencia del servicio */}
+                        <TableRow sx={{ bgcolor: 'grey.100' }}>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Eficiencia del servicio %</TableCell>
+                            {summaryRows.row3.map((val, i) => <TableCell key={i} align="center">{val > 0 ? val.toFixed(1) + '%' : '-'}</TableCell>)}
+                            <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'grey.300' }}>{summaryTotals.r3Total.toFixed(1)}%</TableCell>
+                        </TableRow>
+
+                        {/* 4. Pendientes Serv. Acumulado */}
+                        <TableRow sx={{ bgcolor: 'grey.50' }}>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Pendientes Serv. Acumulado</TableCell>
+                            {summaryRows.row4.map((val, i) => <TableCell key={i} align="center">{val !== 0 ? val : '-'}</TableCell>)}
+                            <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'grey.200' }}>{summaryTotals.r4Total}</TableCell>
+                        </TableRow>
+
+                        {/* 5. Preimputado Serv. Acumulado */}
+                        <TableRow sx={{ bgcolor: 'grey.50' }}>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Preimputado Serv. Acumulado</TableCell>
+                            {summaryRows.row5.map((val, i) => <TableCell key={i} align="center">{val !== 0 ? val : '-'}</TableCell>)}
+                            <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'grey.200' }}>{summaryTotals.r5Total}</TableCell>
+                        </TableRow>
+
+                        {/* 6. Realmente Trabajadas */}
+                        <TableRow sx={{ bgcolor: 'primary.50' }}>
+                            <TableCell sx={{ fontWeight: 'bold', color: 'primary.main' }}>Realmente Trabajadas</TableCell>
+                            {summaryRows.row6.map((val, i) => <TableCell key={i} align="center" sx={{ fontWeight: 'bold' }}>{val > 0 ? val : '-'}</TableCell>)}
+                            <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'primary.100', color: 'primary.dark' }}>{summaryTotals.r6Total}</TableCell>
+                        </TableRow>
+
                     </TableBody>
                 </Table>
             </TableContainer>
@@ -345,8 +463,8 @@ export default function Statistics() {
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                 <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)}>
-                    <Tab label="Estadísticas de Imputación" />
-                    <Tab label="Estadísticas Mensuales" />
+                    <Tab label="Estadísticas por Usuario" />
+                    <Tab label="Estadísticas Anuales" />
                 </Tabs>
             </Box>
 

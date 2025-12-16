@@ -7,7 +7,7 @@ import {
   TableContainer, TableHead, TableRow, Chip, IconButton, TextField,
   ToggleButtonGroup, ToggleButton, TablePagination, Grid, TableSortLabel,
   Card, CardContent, FormControl, InputLabel, Select, MenuItem, Divider,
-  Tooltip, Dialog
+  Tooltip, Dialog, Tabs, Tab
 } from '@mui/material';
 import {
   Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock, Edit
@@ -40,6 +40,8 @@ export default function Tasks() {
   const [summaryYear, setSummaryYear] = useState(new Date().getFullYear());
   const [summaryMonth, setSummaryMonth] = useState(new Date().getMonth());
   const [summaryWeek, setSummaryWeek] = useState('');
+
+  const [tabIndex, setTabIndex] = useState(0); // 0: Tareas, 1: Resúmenes
 
   const allTasks = getAllTasks();
   const myTasks = allTasks.filter(t => t.assignedUserIds?.includes(user.id));
@@ -165,230 +167,268 @@ export default function Tasks() {
           <Typography variant="h5" color="text.primary">Gestión de Tareas</Typography>
           <Typography variant="body2" color="text.secondary">Administra tus tareas asignadas</Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => setOpen(true)}
-        >
-          Nueva Tarea
-        </Button>
+        {tabIndex === 0 && (
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => setOpen(true)}
+          >
+            Nueva Tarea
+          </Button>
+        )}
+      </Box>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)}>
+          <Tab label="Tareas" />
+          <Tab label="Resúmenes" />
+        </Tabs>
       </Box>
 
       <Grid container spacing={3}>
-        {/* LEFT COLUMN: TASKS TABLE */}
-        <Grid item xs={7} md={8}>
-          <Paper elevation={0} variant="outlined" sx={{ mb: 2, p: 2 }}>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-              <TextField
-                size="small"
-                placeholder="Buscar código o nombre..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                InputProps={{ startAdornment: <Search color="action" fontSize="small" sx={{ mr: 1 }} /> }}
-                sx={{ flexGrow: 1 }}
-              />
-              <ToggleButtonGroup
-                value={filterStatus}
-                exclusive
-                onChange={(e, v) => v && setFilterStatus(v)}
-                size="small"
-              >
-                <ToggleButton value="ALL">Todas</ToggleButton>
-                <ToggleButton value="ACTIVE">Activas</ToggleButton>
-                <ToggleButton value="INACTIVE">Inactivas</ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
-
-            <TableContainer>
-              <Table size="small">
-                <TableHead sx={{ bgcolor: 'background.default' }}>
-                  <TableRow>
-                    <TableCell>
-                      <TableSortLabel
-                        active={orderBy === 'code'}
-                        direction={orderBy === 'code' ? order : 'asc'}
-                        onClick={() => handleRequestSort('code')}
-                      >
-                        Código
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell>
-                      <TableSortLabel
-                        active={orderBy === 'name'}
-                        direction={orderBy === 'name' ? order : 'asc'}
-                        onClick={() => handleRequestSort('name')}
-                      >
-                        Nombre
-                      </TableSortLabel>
-                    </TableCell>
-                    <TableCell align="center">UTES</TableCell>
-                    <TableCell align="center">Estado</TableCell>
-                    <TableCell align="right">Acciones</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {visibleTasks.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>No se encontraron tareas.</TableCell></TableRow>
-                  ) : visibleTasks.map(task => (
-                    <TableRow key={task.id} hover>
-                      <TableCell component="th" scope="row">{task.code}</TableCell>
-                      <TableCell>
-                        <Typography variant="body2">{task.name}</Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2">{task.utes > 0 ? task.utes : '-'}</Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={task.active ? 'Activa' : 'Inactiva'}
-                          color={task.active ? 'success' : 'default'}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                          <IconButton
-                            onClick={() => setTaskDescription(task)}
-                            size="small"
-                            color="info"
-                            sx={{ color: 'text.secondary' }}
-                          >
-                            <InfoOutlined />
-                          </IconButton>
-                          <IconButton
-                            onClick={() => {
-                              setEditingTask(task);
-                              setOpen(true);
-                            }}
-                            size="small"
-                            color="primary"
-                          >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                          {task.permanent ? (
-                            <Tooltip title="Tarea Permanente">
-                              <IconButton size="small" disabled>
-                                <Lock fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          ) : (
-                            <IconButton
-                              onClick={() => toggleTaskStatus(task.id)}
-                              color={task.active ? 'error' : 'success'}
-                              size="small"
-                            >
-                              {task.active ? <PowerSettingsNew /> : <PowerOff />}
-                            </IconButton>
-                          )}
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TablePagination
-              rowsPerPageOptions={[15, 25, 50]}
-              component="div"
-              count={filteredTasks.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              labelRowsPerPage="Filas:"
-            />
-          </Paper>
-        </Grid>
-
-        {/* RIGHT COLUMN: SUMMARY WIDGET */}
-        <Grid item xs={5} md={4}>
-          <Card variant="outlined">
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <FilterList color="primary" />
-                <Typography variant="h6">Resumen Imputado</Typography>
+        {/* TAB 0: TASKS TABLE */}
+        {tabIndex === 0 && (
+          <Grid item xs={12}>
+            {/* ... Content of Left Column ... */}
+            <Paper elevation={0} variant="outlined" sx={{ mb: 2, p: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+                <TextField
+                  size="small"
+                  placeholder="Buscar código o nombre..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  InputProps={{ startAdornment: <Search color="action" fontSize="small" sx={{ mr: 1 }} /> }}
+                  sx={{ flexGrow: 1 }}
+                />
+                <ToggleButtonGroup
+                  value={filterStatus}
+                  exclusive
+                  onChange={(e, v) => v && setFilterStatus(v)}
+                  size="small"
+                >
+                  <ToggleButton value="ALL">Todas</ToggleButton>
+                  <ToggleButton value="ACTIVE">Activas</ToggleButton>
+                  <ToggleButton value="INACTIVE">Inactivas</ToggleButton>
+                </ToggleButtonGroup>
               </Box>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Total de horas imputadas filtradas por periodo.
-              </Typography>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
-                <FormControl size="small" fullWidth>
-                  <InputLabel>Periodo</InputLabel>
-                  <Select value={summaryMode} label="Periodo" onChange={e => setSummaryMode(e.target.value)}>
-                    <MenuItem value="ANUAL">Anual</MenuItem>
-                    <MenuItem value="MENSUAL">Mensual</MenuItem>
-                    <MenuItem value="SEMANAL">Semanal</MenuItem>
-                  </Select>
-                </FormControl>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead sx={{ bgcolor: 'background.default' }}>
+                    <TableRow>
+                      <TableCell>
+                        <TableSortLabel
+                          active={orderBy === 'code'}
+                          direction={orderBy === 'code' ? order : 'asc'}
+                          onClick={() => handleRequestSort('code')}
+                        >
+                          Código
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={orderBy === 'name'}
+                          direction={orderBy === 'name' ? order : 'asc'}
+                          onClick={() => handleRequestSort('name')}
+                        >
+                          Nombre
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell align="center">UTES</TableCell>
+                      <TableCell align="center">UTES Gastadas</TableCell>
+                      <TableCell align="center">UTES Quedan</TableCell>
+                      <TableCell align="center">Estado</TableCell>
+                      <TableCell align="right">Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {visibleTasks.length === 0 ? (
+                      <TableRow><TableCell colSpan={7} align="center" sx={{ py: 4, color: 'text.secondary' }}>No se encontraron tareas.</TableCell></TableRow>
+                    ) : visibleTasks.map(task => {
+                      const taskImputations = imputations.filter(i => i.taskId === task.id);
+                      const gastadas = taskImputations.reduce((sum, imp) =>
+                        sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0)
+                        , 0);
+                      const quedan = (task.utes || 0) - gastadas;
 
-                <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
-                  {/* Always Year */}
+                      return (
+                        <TableRow key={task.id} hover>
+                          <TableCell component="th" scope="row">{task.code}</TableCell>
+                          <TableCell>
+                            <Typography variant="body2">{task.name}</Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2">{task.utes > 0 ? task.utes : '-'}</Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2" color="text.secondary">{gastadas > 0 ? gastadas : '-'}</Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2" sx={{
+                              fontWeight: 'bold',
+                              color: task.utes > 0
+                                ? (quedan < 0 ? 'error.main' : (quedan > 0 ? 'success.main' : 'text.primary'))
+                                : 'text.primary'
+                            }}>
+                              {task.utes > 0 ? quedan : '-'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip
+                              label={task.active ? 'Activa' : 'Inactiva'}
+                              color={task.active ? 'success' : 'default'}
+                              size="small"
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                              <IconButton
+                                onClick={() => setTaskDescription(task)}
+                                size="small"
+                                color="info"
+                                sx={{ color: 'text.secondary' }}
+                              >
+                                <InfoOutlined />
+                              </IconButton>
+                              <IconButton
+                                onClick={() => {
+                                  setEditingTask(task);
+                                  setOpen(true);
+                                }}
+                                size="small"
+                                color="primary"
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                              {task.permanent ? (
+                                <Tooltip title="Tarea Permanente">
+                                  <IconButton size="small" disabled>
+                                    <Lock fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              ) : (
+                                <IconButton
+                                  onClick={() => toggleTaskStatus(task.id)}
+                                  color={task.active ? 'error' : 'success'}
+                                  size="small"
+                                >
+                                  {task.active ? <PowerSettingsNew /> : <PowerOff />}
+                                </IconButton>
+                              )}
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                rowsPerPageOptions={[15, 25, 50]}
+                component="div"
+                count={filteredTasks.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                labelRowsPerPage="Filas:"
+              />
+            </Paper>
+          </Grid>
+        )}
+
+        {/* TAB 1: SUMMARY WIDGET */}
+        {tabIndex === 1 && (
+          <Grid item xs={12} md={6}>
+            {/* ... Content of Right Column ... */}
+            <Card variant="outlined">
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <FilterList color="primary" />
+                  <Typography variant="h6">Resumen Imputado</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Total de horas imputadas filtradas por periodo.
+                </Typography>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
                   <FormControl size="small" fullWidth>
-                    <InputLabel>Año</InputLabel>
-                    <Select value={summaryYear} label="Año" onChange={e => setSummaryYear(e.target.value)}>
-                      {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+                    <InputLabel>Periodo</InputLabel>
+                    <Select value={summaryMode} label="Periodo" onChange={e => setSummaryMode(e.target.value)}>
+                      <MenuItem value="ANUAL">Anual</MenuItem>
+                      <MenuItem value="MENSUAL">Mensual</MenuItem>
+                      <MenuItem value="SEMANAL">Semanal</MenuItem>
                     </Select>
                   </FormControl>
 
-                  {/* Month if Mensual or Semanal */}
-                  {(summaryMode === 'MENSUAL' || summaryMode === 'SEMANAL') && (
+                  <Box sx={{ display: 'flex', gap: 2, flexDirection: 'column' }}>
+                    {/* Always Year */}
                     <FormControl size="small" fullWidth>
-                      <InputLabel>Mes</InputLabel>
-                      <Select value={summaryMonth} label="Mes" onChange={e => setSummaryMonth(e.target.value)}>
-                        {months.map(m => <MenuItem key={m.val} value={m.val}>{m.label}</MenuItem>)}
+                      <InputLabel>Año</InputLabel>
+                      <Select value={summaryYear} label="Año" onChange={e => setSummaryYear(e.target.value)}>
+                        {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
                       </Select>
                     </FormControl>
-                  )}
 
-                  {/* Week if Semanal */}
-                  {(summaryMode === 'SEMANAL') && (
-                    <FormControl size="small" fullWidth>
-                      <InputLabel>Semana</InputLabel>
-                      <Select
-                        value={summaryWeek}
-                        label="Semana"
-                        onChange={e => setSummaryWeek(e.target.value)}
-                        disabled={availableWeeks.length === 0}
-                      >
-                        {availableWeeks.map(w => (
-                          <MenuItem key={w.val} value={w.val}>{w.label}</MenuItem>
-                        ))}
-                        {availableWeeks.length === 0 && <MenuItem value="">Sin semanas</MenuItem>}
-                      </Select>
-                    </FormControl>
-                  )}
+                    {/* Month if Mensual or Semanal */}
+                    {(summaryMode === 'MENSUAL' || summaryMode === 'SEMANAL') && (
+                      <FormControl size="small" fullWidth>
+                        <InputLabel>Mes</InputLabel>
+                        <Select value={summaryMonth} label="Mes" onChange={e => setSummaryMonth(e.target.value)}>
+                          {months.map(m => <MenuItem key={m.val} value={m.val}>{m.label}</MenuItem>)}
+                        </Select>
+                      </FormControl>
+                    )}
+
+                    {/* Week if Semanal */}
+                    {(summaryMode === 'SEMANAL') && (
+                      <FormControl size="small" fullWidth>
+                        <InputLabel>Semana</InputLabel>
+                        <Select
+                          value={summaryWeek}
+                          label="Semana"
+                          onChange={e => setSummaryWeek(e.target.value)}
+                          disabled={availableWeeks.length === 0}
+                        >
+                          {availableWeeks.map(w => (
+                            <MenuItem key={w.val} value={w.val}>{w.label}</MenuItem>
+                          ))}
+                          {availableWeeks.length === 0 && <MenuItem value="">Sin semanas</MenuItem>}
+                        </Select>
+                      </FormControl>
+                    )}
+                  </Box>
                 </Box>
-              </Box>
 
-              <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ mb: 2 }} />
 
-              <Table size="small">
-                <TableBody>
-                  {taskTypes.map(type => {
-                    const total = summaryData[type.id] || 0;
-                    if (total === 0) return null;
-                    return (
-                      <TableRow key={type.id} sx={{ bgcolor: type.color || theme.palette.taskTypes?.[type.id] }}>
-                        <TableCell sx={{ fontWeight: 'medium' }}>{type.label}</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{total}h</TableCell>
+                <Table size="small">
+                  <TableBody>
+                    {taskTypes.map(type => {
+                      const total = summaryData[type.id] || 0;
+                      if (total === 0) return null;
+                      return (
+                        <TableRow key={type.id} sx={{ bgcolor: type.color || theme.palette.taskTypes?.[type.id] }}>
+                          <TableCell sx={{ fontWeight: 'medium' }}>{type.label}</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 'bold' }}>{total}h</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {Object.values(summaryData).every(v => v === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={2} align="center" sx={{ color: 'text.secondary' }}>
+                          Sin datos para el filtro seleccionado.
+                        </TableCell>
                       </TableRow>
-                    );
-                  })}
-                  {Object.values(summaryData).every(v => v === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={2} align="center" sx={{ color: 'text.secondary' }}>
-                        Sin datos para el filtro seleccionado.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    )}
+                  </TableBody>
+                </Table>
 
-            </CardContent>
-          </Card>
-        </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
       </Grid>
 
       {/* Task Description Dialog */}

@@ -153,11 +153,36 @@ function TaskTypesTab() {
                         />
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Typography>Color:</Typography>
-                            <input
-                                type="color"
-                                value={newType.color}
-                                onChange={(e) => setNewType({ ...newType, color: e.target.value })}
-                            />
+                            <Box
+                                sx={{
+                                    width: 40,
+                                    height: 40,
+                                    bgcolor: newType.color,
+                                    border: '1px solid #ccc',
+                                    borderRadius: 1,
+                                    position: 'relative',
+                                    cursor: 'pointer',
+                                    overflow: 'hidden'
+                                }}
+                            >
+                                <input
+                                    type="color"
+                                    value={newType.color}
+                                    onChange={(e) => setNewType({ ...newType, color: e.target.value })}
+                                    style={{
+                                        position: 'absolute',
+                                        top: '-50%',
+                                        left: '-50%',
+                                        width: '200%',
+                                        height: '200%',
+                                        opacity: 0,
+                                        cursor: 'pointer'
+                                    }}
+                                />
+                            </Box>
+                            <Typography variant="caption" sx={{ fontFamily: 'monospace', bgcolor: 'grey.100', px: 1, borderRadius: 1 }}>
+                                {newType.color}
+                            </Typography>
                         </Box>
                         <FormControlLabel
                             control={
