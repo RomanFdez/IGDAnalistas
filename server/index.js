@@ -261,6 +261,25 @@ const seedTaskTypes = async () => {
     }
 }
 
+const seedUsers = async () => {
+    try {
+        const adminUser = await User.findOne({ name: 'Admin' });
+        if (!adminUser) {
+            const newUser = new User({
+                id: 'admin-user',
+                name: 'Admin',
+                password: 'admin',
+                role: 'approver',
+                maxHours: 40
+            });
+            await newUser.save();
+            console.log('✅ Seeded Default Admin User');
+        }
+    } catch (err) {
+        console.error('❌ Error seeding users:', err);
+    }
+}
+
 // Serve Static Assets in Production
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../dist')));
@@ -277,5 +296,6 @@ app.listen(PORT, async () => {
     // await seedTaskTypes(); 
     // Re-enabling because it handles migration of new fields.
     await seedTaskTypes();
+    await seedUsers();
     console.log(`🚀 Server running on port ${PORT}`);
 });
