@@ -182,6 +182,16 @@ export default function Dashboard() {
                         <Chip icon={<Lock />} label="Semana Bloqueada" color="error" variant="outlined" />
                     )}
 
+                    <Button
+                        startIcon={<Add />}
+                        onClick={() => setOpenTaskDialog(true)}
+                        variant="outlined"
+                        size="small"
+                        sx={{ mr: 2, borderRadius: 2 }}
+                    >
+                        Nueva Tarea
+                    </Button>
+
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.5, border: '1px solid #ddd', borderRadius: 2, bgcolor: 'background.default' }}>
                         {myTasks.length > 0 ? (
                             <Select
@@ -193,7 +203,7 @@ export default function Dashboard() {
                                 disableUnderline
                                 sx={{ minWidth: 200, px: 2, fontSize: '0.875rem' }}
                             >
-                                <MenuItem value=""><em>Seleccionar Tarea...</em></MenuItem>
+                                <MenuItem value=""><em>Seleccionar Tarea para Imputar...</em></MenuItem>
                                 {myTasks.map(t => <MenuItem key={t.id} value={t.id}>{t.code} - {t.name}</MenuItem>)}
                             </Select>
                         ) : (
@@ -206,16 +216,9 @@ export default function Dashboard() {
                             variant="contained"
                             size="small"
                             sx={{ minWidth: 0, p: 1, borderRadius: 1.5 }}
+                            title="Añadir Imputación"
                         >
                             <Add />
-                        </Button>
-
-                        <Button
-                            onClick={() => setOpenTaskDialog(true)}
-                            size="small"
-                            sx={{ minWidth: 0, textTransform: 'none', fontWeight: 'bold' }}
-                        >
-                            + Tarea
                         </Button>
                     </Box>
                 </Box>
