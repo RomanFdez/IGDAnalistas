@@ -309,8 +309,8 @@ export default function Tasks() {
                 </ToggleButtonGroup>
               </Box>
 
-              <TableContainer>
-                <Table size="small">
+              <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+                <Table size="small" sx={{ minWidth: 800 }}>
                   <TableHead sx={{ bgcolor: 'background.default' }}>
                     <TableRow>
                       <TableCell>

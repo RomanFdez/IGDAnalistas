@@ -430,8 +430,8 @@ export default function Approvals() {
                                     <Typography variant="subtitle2" fontWeight="bold">Detalle de Imputaciones (Consolidado)</Typography>
                                     <Typography variant="caption" color="text.secondary">Todas las tareas de todos los analistas</Typography>
                                 </Box>
-                                <Box sx={{ p: 0 }}>
-                                    <Table size="small">
+                                <Box sx={{ p: 0, overflowX: 'auto' }}>
+                                    <Table size="small" sx={{ minWidth: 1000 }}>
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell
@@ -597,9 +597,9 @@ export default function Approvals() {
                                         </Box>
                                     </Box>
 
-                                    <Box sx={{ p: 0 }}>
+                                    <Box sx={{ p: 0, overflowX: 'auto' }}>
                                         {summary.imputations.length > 0 ? (
-                                            <Table size="small">
+                                            <Table size="small" sx={{ minWidth: 1000 }}>
                                                 <TableHead>
                                                     <TableRow>
                                                         <TableCell

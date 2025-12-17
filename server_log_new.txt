@@ -1,0 +1,208 @@
+
+> imputaciones-gd-mapfre@1.0.0 dev:full
+> concurrently "npm run start-server" "npm run dev"
+
+[0] 
+[0] > imputaciones-gd-mapfre@1.0.0 start-server
+[0] > node server/index.js
+[0] 
+[1] 
+[1] > imputaciones-gd-mapfre@1.0.0 dev
+[1] > vite
+[1] 
+[1] Port 5173 is in use, trying another one...
+[1] 
+[1]   VITE v5.4.21  ready in 335 ms
+[1] 
+[1]   ➜  Local:   http://localhost:5174/
+[1]   ➜  Network: use --host to expose
+[0] ✅ Connected to MongoDB at mongodb://igdapp:Castellae1259@192.168.1.63/igdanalistas?authSource=admin
+[0] 🚀 Server running on port 3001
+[1] 2:42:55 PM [vite] warning: The "typeof" operator will never evaluate to ""
+[1] 41 |  
+[1] 42 |  const generateUUID = () => {
+[1] 43 |    return typeof crypto !== '' && crypto.randomUUID ?
+[1]    |                             ^
+[1] 44 |    crypto.randomUUID() :
+[1] 45 |    `${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+[1] 
+[1]   Plugin: vite:esbuild
+[1]   File: /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/src/context/DataContext.jsx
+[1] 2:42:55 PM [vite] warning: Duplicate key "bgcolor" in object literal
+[1] 90 |                color: 'primary.dark', // Text color needs to be darker? Or primary.contrastText if solid?
+[1] 91 |                // using default selection style usually works, but let's customize
+[1] 92 |                bgcolor: 'rgba(25, 118, 210, 0.08)',
+[1]    |                ^
+[1] 93 |                ':hover': { bgcolor: 'rgba(25, 118, 210, 0.12)' }
+[1] 94 |              }
+[1] 
+[1]   Plugin: vite:esbuild
+[1]   File: /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/src/components/Layout.jsx
+[1] 2:43:52 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:44:01 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:45:44 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:45:44 PM [vite] Internal server error: /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/src/pages/Dashboard.jsx: Expected corresponding JSX closing tag for <Box>. (840:44)
+[1] 
+[1]   838 |                                                         </Select>
+[1]   839 |                                                     </FormControl>
+[1] > 840 |                                             </TableCell>
+[1]       |                                             ^
+[1]   841 |                                             <TableCell align="center">
+[1]   842 |                                                 <Checkbox
+[1]   843 |                                                     checked={imp.seg}
+[1]   Plugin: vite:react-babel
+[1]   File: /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/src/pages/Dashboard.jsx:840:44
+[1]   838|                                                          </Select>
+[1]   839|                                                      </FormControl>
+[1]   840|                                              </TableCell>
+[1]      |                                              ^
+[1]   841|                                              <TableCell align="center">
+[1]   842|                                                  <Checkbox
+[1]       at constructor (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:367:19)
+[1]       at JSXParserMixin.raise (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:6624:19)
+[1]       at JSXParserMixin.jsxParseElementAt (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4756:16)
+[1]       at JSXParserMixin.jsxParseElementAt (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4727:32)
+[1]       at JSXParserMixin.jsxParseElementAt (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4727:32)
+[1]       at JSXParserMixin.jsxParseElement (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4778:17)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4788:19)
+[1]       at JSXParserMixin.parseExprSubscripts (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11145:23)
+[1]       at JSXParserMixin.parseUpdate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11130:21)
+[1]       at JSXParserMixin.parseMaybeUnary (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11110:23)
+[1]       at JSXParserMixin.parseMaybeUnaryOrPrivate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10963:61)
+[1]       at JSXParserMixin.parseExprOps (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10968:23)
+[1]       at JSXParserMixin.parseMaybeConditional (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10945:23)
+[1]       at JSXParserMixin.parseMaybeAssign (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10895:21)
+[1]       at /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10864:39
+[1]       at JSXParserMixin.allowInAnd (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12500:12)
+[1]       at JSXParserMixin.parseMaybeAssignAllowIn (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10864:17)
+[1]       at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12567:17)
+[1]       at JSXParserMixin.parseParenAndDistinguishExpression (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11747:28)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11395:23)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4793:20)
+[1]       at JSXParserMixin.parseExprSubscripts (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11145:23)
+[1]       at JSXParserMixin.parseUpdate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11130:21)
+[1]       at JSXParserMixin.parseMaybeUnary (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11110:23)
+[1]       at JSXParserMixin.parseMaybeUnaryOrPrivate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10963:61)
+[1]       at JSXParserMixin.parseExprOps (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10968:23)
+[1]       at JSXParserMixin.parseMaybeConditional (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10945:23)
+[1]       at JSXParserMixin.parseMaybeAssign (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10895:21)
+[1]       at JSXParserMixin.parseExpressionBase (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10848:23)
+[1]       at /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10844:39
+[1]       at JSXParserMixin.allowInAnd (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12495:16)
+[1]       at JSXParserMixin.parseExpression (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10844:17)
+[1]       at JSXParserMixin.parseReturnStatement (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:13218:28)
+[1]       at JSXParserMixin.parseStatementContent (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12874:21)
+[1]       at JSXParserMixin.parseStatementLike (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12843:17)
+[1]       at JSXParserMixin.parseStatementListItem (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12823:17)
+[1]       at JSXParserMixin.parseBlockOrModuleBlockBody (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:13392:61)
+[1]       at JSXParserMixin.parseBlockBody (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:13385:10)
+[1]       at JSXParserMixin.parseBlock (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:13373:10)
+[1]       at JSXParserMixin.parseFunctionBody (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12174:24)
+[1]       at JSXParserMixin.parseArrowExpression (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12149:10)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11504:25)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4793:20)
+[1]       at JSXParserMixin.parseExprSubscripts (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11145:23)
+[1]       at JSXParserMixin.parseUpdate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11130:21)
+[1]       at JSXParserMixin.parseMaybeUnary (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11110:23)
+[1]       at JSXParserMixin.parseMaybeUnaryOrPrivate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10963:61)
+[1]       at JSXParserMixin.parseExprOps (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10968:23)
+[1]       at JSXParserMixin.parseMaybeConditional (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10945:23)
+[1]       at JSXParserMixin.parseMaybeAssign (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10895:21)
+[1] 2:48:00 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:49:33 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:52:01 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:55:05 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:57:51 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:59:22 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:59:22 PM [vite] Internal server error: /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/src/pages/Dashboard.jsx: Unexpected token (704:36)
+[1] 
+[1]   702 |
+[1]   703 |                                     return (
+[1] > 704 |                                     return (
+[1]       |                                     ^
+[1]   705 |                                         <TableRow key={imp.id} sx={{ bgcolor: rowColor, '&:hover': { bgcolor: '#fafafa' }, '& td': { border: 'none', borderBottom: '1px solid #e0e0e0' } }}>
+[1]   706 |                                             <TableCell sx={{ left: 0, position: 'sticky', bgcolor: 'background.paper', zIndex: 1, maxWidth: '200px' }}>
+[1]   707 |                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+[1]   Plugin: vite:react-babel
+[1]   File: /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/src/pages/Dashboard.jsx:704:36
+[1]   702|  
+[1]   703|                                      return (
+[1]   704|                                      return (
+[1]      |                                      ^
+[1]   705|                                          <TableRow key={imp.id} sx={{ bgcolor: rowColor, '&:hover': { bgcolor: '#fafafa' }, '& td': { border: 'none', borderBottom: '1px solid #e0e0e0' } }}>
+[1]   706|                                              <TableCell sx={{ left: 0, position: 'sticky', bgcolor: 'background.paper', zIndex: 1, maxWidth: '200px' }}>
+[1]       at constructor (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:367:19)
+[1]       at JSXParserMixin.raise (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:6624:19)
+[1]       at JSXParserMixin.unexpected (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:6644:16)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11508:22)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4793:20)
+[1]       at JSXParserMixin.parseExprSubscripts (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11145:23)
+[1]       at JSXParserMixin.parseUpdate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11130:21)
+[1]       at JSXParserMixin.parseMaybeUnary (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11110:23)
+[1]       at JSXParserMixin.parseMaybeUnaryOrPrivate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10963:61)
+[1]       at JSXParserMixin.parseExprOps (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10968:23)
+[1]       at JSXParserMixin.parseMaybeConditional (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10945:23)
+[1]       at JSXParserMixin.parseMaybeAssign (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10895:21)
+[1]       at /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10864:39
+[1]       at JSXParserMixin.allowInAnd (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12500:12)
+[1]       at JSXParserMixin.parseMaybeAssignAllowIn (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10864:17)
+[1]       at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12567:17)
+[1]       at JSXParserMixin.parseParenAndDistinguishExpression (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11747:28)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11395:23)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4793:20)
+[1]       at JSXParserMixin.parseExprSubscripts (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11145:23)
+[1]       at JSXParserMixin.parseUpdate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11130:21)
+[1]       at JSXParserMixin.parseMaybeUnary (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11110:23)
+[1]       at JSXParserMixin.parseMaybeUnaryOrPrivate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10963:61)
+[1]       at JSXParserMixin.parseExprOps (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10968:23)
+[1]       at JSXParserMixin.parseMaybeConditional (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10945:23)
+[1]       at JSXParserMixin.parseMaybeAssign (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10895:21)
+[1]       at JSXParserMixin.parseExpressionBase (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10848:23)
+[1]       at /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10844:39
+[1]       at JSXParserMixin.allowInAnd (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12495:16)
+[1]       at JSXParserMixin.parseExpression (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10844:17)
+[1]       at JSXParserMixin.parseReturnStatement (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:13218:28)
+[1]       at JSXParserMixin.parseStatementContent (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12874:21)
+[1]       at JSXParserMixin.parseStatementLike (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12843:17)
+[1]       at JSXParserMixin.parseStatementListItem (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12823:17)
+[1]       at JSXParserMixin.parseBlockOrModuleBlockBody (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:13392:61)
+[1]       at JSXParserMixin.parseBlockBody (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:13385:10)
+[1]       at JSXParserMixin.parseBlock (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:13373:10)
+[1]       at JSXParserMixin.parseFunctionBody (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12174:24)
+[1]       at JSXParserMixin.parseArrowExpression (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12149:10)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11504:25)
+[1]       at JSXParserMixin.parseExprAtom (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:4793:20)
+[1]       at JSXParserMixin.parseExprSubscripts (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11145:23)
+[1]       at JSXParserMixin.parseUpdate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11130:21)
+[1]       at JSXParserMixin.parseMaybeUnary (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:11110:23)
+[1]       at JSXParserMixin.parseMaybeUnaryOrPrivate (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10963:61)
+[1]       at JSXParserMixin.parseExprOps (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10968:23)
+[1]       at JSXParserMixin.parseMaybeConditional (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10945:23)
+[1]       at JSXParserMixin.parseMaybeAssign (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10895:21)
+[1]       at /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:10864:39
+[1]       at JSXParserMixin.allowInAnd (/Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/node_modules/@babel/parser/lib/index.js:12500:12)
+[1] 2:59:43 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 3:01:36 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 3:04:24 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 3:05:44 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 3:07:03 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 3:09:21 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 3:13:14 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 3:19:19 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 3:20:04 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 4:48:18 PM [vite] hmr update /src/pages/Statistics.jsx
+[1] 4:59:51 PM [vite] hmr update /src/pages/Statistics.jsx
+[1] 7:58:00 PM [vite] hmr update /src/components/Layout.jsx
+[1] 7:58:00 PM [vite] warning: Duplicate key "bgcolor" in object literal
+[1] 90 |                color: 'primary.dark', // Text color needs to be darker? Or primary.contrastText if solid?
+[1] 91 |                // using default selection style usually works, but let's customize
+[1] 92 |                bgcolor: 'rgba(25, 118, 210, 0.08)',
+[1]    |                ^
+[1] 93 |                ':hover': { bgcolor: 'rgba(25, 118, 210, 0.12)' }
+[1] 94 |              }
+[1] 
+[1]   Plugin: vite:esbuild
+[1]   File: /Users/alvaroroman/.gemini/antigravity/scratch/imputaciones-gd-mapfre/src/components/Layout.jsx
+[1] 7:58:16 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 7:59:07 PM [vite] hmr update /src/pages/Tasks.jsx
+[1] 7:59:19 PM [vite] hmr update /src/pages/Approvals.jsx

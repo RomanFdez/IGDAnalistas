@@ -178,7 +178,7 @@ export default function Layout({ children }) {
 
             <Box
                 component="main"
-                sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` }, minHeight: '100vh', bgcolor: 'background.default' }}
+                sx={{ flexGrow: 1, p: { xs: 1, md: 3 }, width: { sm: `calc(100% - ${drawerWidth}px)` }, minHeight: '100vh', bgcolor: 'background.default' }}
             >
                 <Toolbar variant="dense" sx={{ minHeight: '32px !important' }} /> {/* Spacer for fixed AppBar */}
                 {children}

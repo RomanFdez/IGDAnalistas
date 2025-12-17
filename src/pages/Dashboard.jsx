@@ -654,10 +654,10 @@ export default function Dashboard() {
 
                     {/* Main Table */}
                     <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ overflowX: 'auto' }}>
-                        <Table size="small" sx={{ '& td': { py: 0.5, fontSize: '0.85rem', border: 'none', borderBottom: '1px solid #e0e0e0' }, '& th': { py: 0.5, fontSize: '0.85rem', border: 'none', borderBottom: '1px solid #e0e0e0' } }}>
+                        <Table size="small" sx={{ minWidth: 1000, '& td': { py: 0.5, fontSize: '0.85rem', border: 'none', borderBottom: '1px solid #e0e0e0' }, '& th': { py: 0.5, fontSize: '0.85rem', border: 'none', borderBottom: '1px solid #e0e0e0' } }}>
                             <TableHead sx={{ bgcolor: 'background.default' }}>
                                 <TableRow>
-                                    <TableCell width="37%" sx={{ bgcolor: 'background.default', left: 0, position: 'sticky', zIndex: 2, borderRight: '1px solid #e0e0e0' }}>
+                                    <TableCell width="37%" sx={{ bgcolor: 'background.default', left: 0, position: { xs: 'static', md: 'sticky' }, zIndex: 2, borderRight: '1px solid #e0e0e0' }}>
                                         <TableSortLabel
                                             active={orderBy === 'task'}
                                             direction={orderBy === 'task' ? order : 'asc'}
@@ -666,7 +666,7 @@ export default function Dashboard() {
                                             Tarea
                                         </TableSortLabel>
                                     </TableCell>
-                                    <TableCell width="12%" sx={{ bgcolor: 'background.default', left: '37%', position: 'sticky', zIndex: 2, borderLeft: '1px solid #e0e0e0' }}>
+                                    <TableCell width="12%" sx={{ bgcolor: 'background.default', left: '37%', position: { xs: 'static', md: 'sticky' }, zIndex: 2, borderLeft: '1px solid #e0e0e0' }}>
                                         <TableSortLabel
                                             active={orderBy === 'type'}
                                             direction={orderBy === 'type' ? order : 'asc'}
@@ -703,7 +703,7 @@ export default function Dashboard() {
                                     return (
 
                                         <TableRow key={imp.id} sx={{ height: '45px', bgcolor: rowColor, '&:hover': { bgcolor: '#fafafa' }, '& td': { border: 'none', borderBottom: '1px solid #e0e0e0', py: '0 !important' } }}>
-                                            <TableCell sx={{ left: 0, position: 'sticky', bgcolor: 'background.paper', zIndex: 1, maxWidth: '400px', borderRight: '1px solid #e0e0e0' }}>
+                                            <TableCell sx={{ left: 0, position: { xs: 'static', md: 'sticky' }, bgcolor: 'background.paper', zIndex: 1, maxWidth: '400px', borderRight: '1px solid #e0e0e0' }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                     <Box sx={{ display: 'flex', flexShrink: 0 }}>
                                                         <IconButton
@@ -804,7 +804,7 @@ export default function Dashboard() {
                                                     </Tooltip>
                                                 </Box>
                                             </TableCell>
-                                            <TableCell sx={{ left: '37%', position: 'sticky', bgcolor: 'background.paper', zIndex: 1, p: '4px !important', borderLeft: '1px solid #e0e0e0' }}>
+                                            <TableCell sx={{ left: '37%', position: { xs: 'static', md: 'sticky' }, bgcolor: 'background.paper', zIndex: 1, p: '4px !important', borderLeft: '1px solid #e0e0e0' }}>
                                                 <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                                     <FormControl size="small" variant="standard" sx={{ width: '130px' }}>
                                                         <Select
