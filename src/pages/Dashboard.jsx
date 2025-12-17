@@ -654,10 +654,10 @@ export default function Dashboard() {
 
                     {/* Main Table */}
                     <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ overflowX: 'auto' }}>
-                        <Table size="small" sx={{ '& td': { py: 0.5, fontSize: '0.85rem' }, '& th': { py: 0.5, fontSize: '0.85rem' } }}>
+                        <Table size="small" sx={{ '& td': { py: 0.5, fontSize: '0.85rem', border: 'none', borderBottom: '1px solid #e0e0e0' }, '& th': { py: 0.5, fontSize: '0.85rem', border: 'none', borderBottom: '1px solid #e0e0e0' } }}>
                             <TableHead sx={{ bgcolor: 'background.default' }}>
                                 <TableRow>
-                                    <TableCell width="30%">
+                                    <TableCell width="37%" sx={{ bgcolor: 'background.default', left: 0, position: 'sticky', zIndex: 2, borderRight: '1px solid #e0e0e0' }}>
                                         <TableSortLabel
                                             active={orderBy === 'task'}
                                             direction={orderBy === 'task' ? order : 'asc'}
@@ -666,7 +666,7 @@ export default function Dashboard() {
                                             Tarea
                                         </TableSortLabel>
                                     </TableCell>
-                                    <TableCell width="15%">
+                                    <TableCell width="12%" sx={{ bgcolor: 'background.default', left: '37%', position: 'sticky', zIndex: 2, borderLeft: '1px solid #e0e0e0' }}>
                                         <TableSortLabel
                                             active={orderBy === 'type'}
                                             direction={orderBy === 'type' ? order : 'asc'}
@@ -675,7 +675,7 @@ export default function Dashboard() {
                                             Tipo
                                         </TableSortLabel>
                                     </TableCell>
-                                    <TableCell width="5%" align="center">
+                                    <TableCell width="1%" align="center" sx={{ borderRight: '1px solid #e0e0e0' }}>
                                         <TableSortLabel
                                             active={orderBy === 'seg'}
                                             direction={orderBy === 'seg' ? order : 'asc'}
@@ -684,150 +684,167 @@ export default function Dashboard() {
                                             SEG
                                         </TableSortLabel>
                                     </TableCell>
-                                    {weekDays.map(d => (
-                                        <TableCell key={d.label} align="center" sx={{ textTransform: 'capitalize' }}>
+                                    {weekDays.map((d, i) => (
+                                        <TableCell width="8%" key={d.label} align="center" sx={{ textTransform: 'capitalize', borderLeft: i === 0 ? '1px solid #e0e0e0 !important' : 'none !important', borderRight: i === weekDays.length - 1 ? '1px solid #e0e0e0 !important' : 'none !important' }}>
                                             {d.label.split(' ')[0]}
                                         </TableCell>
                                     ))}
-                                    <TableCell width="8%" align="center" sx={{ fontWeight: 'bold' }}>Total</TableCell>
-                                    <TableCell width="5%"></TableCell>
+                                    <TableCell width="5%" align="right" sx={{ fontWeight: 'bold', borderLeft: '1px solid #e0e0e0', pr: 1 }}>Total</TableCell>
+                                    <TableCell width="2%" align="left" sx={{ pl: 0 }}></TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {sortedAndFilteredImputations.map(imp => {
                                     const task = tasks.find(t => t.id === imp.taskId);
                                     const typeConfig = taskTypes.find(t => t.id === imp.type);
-                                    // Use custom theme colors - wait, theme.palette.taskTypes is static. 
-                                    // We need to use typeConfig.color if available, or fallback to theme.
-                                    const rowColor = typeConfig?.color || theme.palette.taskTypes[imp.type] || '#fff';
+                                    // Row color always white as per design, type color is only for the chip
+                                    const rowColor = 'background.paper';
 
                                     return (
-                                        <TableRow key={imp.id} sx={{ bgcolor: rowColor, '&:hover': { filter: 'brightness(0.98)' }, '& td, & th': { borderBottom: 'none' } }}>
-                                            <TableCell sx={{ display: 'flex', alignItems: 'center' }}>
-                                                <IconButton
-                                                    onClick={() => setTaskDescription(task)}
-                                                    size="small"
-                                                    color="info"
-                                                    sx={{ mr: 0.5 }}
-                                                >
-                                                    <InfoOutlined fontSize="small" />
-                                                </IconButton>
-                                                {imp.status !== 'APPROVED' && (
-                                                    <Tooltip title={imp.note || "Añadir nota"}>
+
+                                        <TableRow key={imp.id} sx={{ height: '45px', bgcolor: rowColor, '&:hover': { bgcolor: '#fafafa' }, '& td': { border: 'none', borderBottom: '1px solid #e0e0e0', py: '0 !important' } }}>
+                                            <TableCell sx={{ left: 0, position: 'sticky', bgcolor: 'background.paper', zIndex: 1, maxWidth: '400px', borderRight: '1px solid #e0e0e0' }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Box sx={{ display: 'flex', flexShrink: 0 }}>
                                                         <IconButton
+                                                            onClick={() => setTaskDescription(task)}
                                                             size="small"
-                                                            onClick={() => handleOpenNote(imp)}
-                                                            color={imp.note ? "primary" : "default"}
-                                                            sx={{ mr: 0.5 }}
+                                                            color="info"
+                                                            sx={{ p: 0.5 }}
                                                         >
-                                                            <Comment fontSize="small" />
+                                                            <InfoOutlined fontSize="small" />
                                                         </IconButton>
-                                                    </Tooltip>
-                                                )}
-                                                <Tooltip title={
-                                                    <Box>
-                                                        <Typography variant="body2">{task?.name}</Typography>
-                                                        {task?.utes > 0 && (
-                                                            <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#ffcc80' }}>
-                                                                UTES: {(() => {
-                                                                    const totalConsumed = imputations
-                                                                        .filter(i => i.taskId === task.id)
-                                                                        .reduce((acc, curr) => {
-                                                                            const typeInfo = taskTypes.find(t => t.id === curr.type);
-                                                                            if (typeInfo && typeInfo.subtractsFromBudget === false) return acc;
-                                                                            return acc + Object.values(curr.hours).reduce((a, b) => a + (Number(b) || 0), 0);
-                                                                        }, 0);
-                                                                    const remaining = task.utes - totalConsumed;
-                                                                    return (
-                                                                        <span style={{ color: remaining < 0 ? '#ff5252' : 'inherit', fontWeight: remaining < 0 ? 'bold' : 'normal' }}>
-                                                                            {remaining.toLocaleString('es-ES', { maximumFractionDigits: 1 })} disponibles / {task.utes}
-                                                                        </span>
-                                                                    );
-                                                                })()}
+                                                        {imp.status !== 'APPROVED' && (
+                                                            <Tooltip title={imp.note || "Añadir nota"}>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() => handleOpenNote(imp)}
+                                                                    color={imp.note ? "primary" : "default"}
+                                                                    sx={{ p: 0.5 }}
+                                                                >
+                                                                    <Comment fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        )}
+                                                    </Box>
+                                                    <Tooltip title={
+                                                        <Box>
+                                                            <Typography variant="body2">{task?.name}</Typography>
+                                                            {task?.utes > 0 && (
+                                                                <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#ffcc80' }}>
+                                                                    UTES: {(() => {
+                                                                        const totalConsumed = imputations
+                                                                            .filter(i => i.taskId === task.id)
+                                                                            .reduce((acc, curr) => {
+                                                                                const typeInfo = taskTypes.find(t => t.id === curr.type);
+                                                                                if (typeInfo && typeInfo.subtractsFromBudget === false) return acc;
+                                                                                return acc + Object.values(curr.hours).reduce((a, b) => a + (Number(b) || 0), 0);
+                                                                            }, 0);
+                                                                        const remaining = task.utes - totalConsumed;
+                                                                        return (
+                                                                            <span style={{ color: remaining < 0 ? '#ff5252' : 'inherit', fontWeight: remaining < 0 ? 'bold' : 'normal' }}>
+                                                                                {remaining.toLocaleString('es-ES', { maximumFractionDigits: 1 })} disponibles / {task.utes}
+                                                                            </span>
+                                                                        );
+                                                                    })()}
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
+                                                    }>
+                                                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                                                            <Typography variant="body2" noWrap sx={{ fontWeight: 'medium' }}>
+                                                                {task?.code === 'Estructural' ? 'Estructural' : `${task?.hito || '-'} - ${task?.description || task?.name}`}
                                                             </Typography>
-                                                        )}
-                                                    </Box>
-                                                }>
-                                                    <Box>
-                                                        <Typography variant="body2" noWrap sx={{ maxWidth: 250, fontWeight: 'medium' }}>
-                                                            {task?.code === 'Estructural' ? 'Estructural' : `${task?.hito || '-'} - ${task?.description || task?.name}`}
-                                                        </Typography>
-                                                        {task?.utes > 0 && (
-                                                            <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                                                                <Tooltip title="UTES Pendientes de Imputar">
-                                                                    <Typography variant="caption" sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
-                                                                        {(() => {
-                                                                            const taskImputations = imputations.filter(i => i.taskId === task.id);
-                                                                            const preImputedTotal = taskImputations.reduce((sum, imp) => {
-                                                                                return imp.type === 'PRE_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                                                                            }, 0);
-                                                                            const yaImputadoTotal = taskImputations.reduce((sum, imp) => {
-                                                                                return imp.type === 'YA_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                                                                            }, 0);
-                                                                            const preRemaining = preImputedTotal - yaImputadoTotal;
+                                                            {task?.utes > 0 && (
+                                                                <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                                                                    <Tooltip title="UTES Pendientes de Imputar">
+                                                                        <Typography variant="caption" sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
+                                                                            {(() => {
+                                                                                const taskImputations = imputations.filter(i => i.taskId === task.id);
+                                                                                const preImputedTotal = taskImputations.reduce((sum, imp) => {
+                                                                                    return imp.type === 'PRE_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                                                                                }, 0);
+                                                                                const yaImputadoTotal = taskImputations.reduce((sum, imp) => {
+                                                                                    return imp.type === 'YA_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                                                                                }, 0);
+                                                                                const preRemaining = preImputedTotal - yaImputadoTotal;
 
-                                                                            return (
-                                                                                <span style={{ color: preRemaining < 0 ? '#d32f2f' : (preRemaining > 0 ? '#2e7d32' : 'inherit'), fontWeight: preRemaining !== 0 ? 'bold' : 'normal' }}>
-                                                                                    {preRemaining.toFixed(1)} Preimputadas
-                                                                                </span>
-                                                                            );
-                                                                        })()}
-                                                                    </Typography>
-                                                                </Tooltip>
+                                                                                return (
+                                                                                    <span style={{ color: preRemaining < 0 ? '#d32f2f' : (preRemaining > 0 ? '#2e7d32' : 'inherit'), fontWeight: preRemaining !== 0 ? 'bold' : 'normal' }}>
+                                                                                        {preRemaining.toFixed(1)} Preimputadas
+                                                                                    </span>
+                                                                                );
+                                                                            })()}
+                                                                        </Typography>
+                                                                    </Tooltip>
 
-                                                                <Tooltip title="UTES Preimputadas Disponibles">
-                                                                    <Typography variant="caption" sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
-                                                                        {(() => {
-                                                                            const taskImputations = imputations.filter(i => i.taskId === task.id);
-                                                                            const preImputedTotal = taskImputations.reduce((sum, imp) => {
-                                                                                return imp.type === 'PRE_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                                                                            }, 0);
-                                                                            const yaImputadoTotal = taskImputations.reduce((sum, imp) => {
-                                                                                return imp.type === 'YA_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                                                                            }, 0);
-                                                                            const preRemaining = preImputedTotal - yaImputadoTotal;
+                                                                    <Tooltip title="UTES Preimputadas Disponibles">
+                                                                        <Typography variant="caption" sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
+                                                                            {(() => {
+                                                                                const taskImputations = imputations.filter(i => i.taskId === task.id);
+                                                                                const preImputedTotal = taskImputations.reduce((sum, imp) => {
+                                                                                    return imp.type === 'PRE_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                                                                                }, 0);
+                                                                                const yaImputadoTotal = taskImputations.reduce((sum, imp) => {
+                                                                                    return imp.type === 'YA_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
+                                                                                }, 0);
+                                                                                const preRemaining = preImputedTotal - yaImputadoTotal;
 
-                                                                            return (
-                                                                                <span style={{ color: preRemaining < 0 ? '#d32f2f' : (preRemaining > 0 ? '#2e7d32' : 'inherit'), fontWeight: preRemaining !== 0 ? 'bold' : 'normal' }}>
-                                                                                    {preRemaining.toFixed(1)} Preimputadas
-                                                                                </span>
-                                                                            );
-                                                                        })()}
-                                                                    </Typography>
-                                                                </Tooltip>
-                                                            </Box>
-                                                        )}
-                                                    </Box>
-                                                </Tooltip>
+                                                                                return (
+                                                                                    <span style={{ color: preRemaining < 0 ? '#d32f2f' : (preRemaining > 0 ? '#2e7d32' : 'inherit'), fontWeight: preRemaining !== 0 ? 'bold' : 'normal' }}>
+                                                                                        {preRemaining.toFixed(1)} Preimputadas
+                                                                                    </span>
+                                                                                );
+                                                                            })()}
+                                                                        </Typography>
+                                                                    </Tooltip>
+                                                                </Box>
+                                                            )}
+                                                        </Box>
+                                                    </Tooltip>
+                                                </Box>
                                             </TableCell>
-                                            <TableCell>
-                                                <FormControl fullWidth size="small" variant="standard">
-                                                    <Select
-                                                        value={imp.type}
-                                                        onChange={(e) => updateField(imp, 'type', e.target.value)}
-                                                        disabled={isLocked}
-                                                        disableUnderline
-                                                        sx={{ fontSize: '0.875rem' }}
-                                                    >
-                                                        {taskTypes.filter(t => {
-                                                            const isStructural = task?.code === 'Estructural';
-                                                            // Dynamic check for structural or not
-                                                            // If t.structural is defined, use it.
-                                                            if (t.structural !== undefined) {
-                                                                return isStructural ? t.structural : !t.structural;
-                                                            }
+                                            <TableCell sx={{ left: '37%', position: 'sticky', bgcolor: 'background.paper', zIndex: 1, p: '4px !important', borderLeft: '1px solid #e0e0e0' }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                                    <FormControl size="small" variant="standard" sx={{ width: '130px' }}>
+                                                        <Select
+                                                            value={imp.type}
+                                                            onChange={(e) => updateField(imp, 'type', e.target.value)}
+                                                            disabled={isLocked}
+                                                            disableUnderline
+                                                            sx={{
+                                                                fontSize: '0.75rem',
+                                                                bgcolor: typeConfig?.color || '#eee',
+                                                                borderRadius: 1,
+                                                                px: 1,
+                                                                py: 0.2, // Compact
+                                                                textAlign: 'center',
+                                                                fontWeight: 'medium',
+                                                                color: 'text.primary',
+                                                                '& .MuiSelect-select': { pr: '24px !important', display: 'flex', justifyContent: 'center' },
+                                                                '& .MuiSvgIcon-root': { display: isLocked ? 'none' : 'block' }
+                                                            }}
+                                                        >
+                                                            {taskTypes.filter(t => {
+                                                                const isStructural = task?.code === 'Estructural';
+                                                                // Dynamic check for structural or not
+                                                                // If t.structural is defined, use it.
+                                                                if (t.structural !== undefined) {
+                                                                    return isStructural ? t.structural : !t.structural;
+                                                                }
 
-                                                            // Fallback to ID check if property not set correctly yet
-                                                            if (isStructural) {
-                                                                return ['SIN_PROYECTO', 'VACACIONES', 'ENFERMEDAD', 'FESTIVO', 'BAJA', 'OTROS'].includes(t.id);
-                                                            } else {
-                                                                return ['TRABAJADO', 'JIRA', 'YA_IMPUTADO', 'PRE_IMPUTADO', 'PENDIENTE', 'REGULARIZADO', 'RECUPERADO'].includes(t.id);
-                                                            }
-                                                        }).map(t => <MenuItem key={t.id} value={t.id}>{t.label}</MenuItem>)}
-                                                    </Select>
-                                                </FormControl>
+                                                                // Fallback to ID check if property not set correctly yet
+                                                                if (isStructural) {
+                                                                    return ['SIN_PROYECTO', 'VACACIONES', 'ENFERMEDAD', 'FESTIVO', 'BAJA', 'OTROS'].includes(t.id);
+                                                                } else {
+                                                                    return ['TRABAJADO', 'JIRA', 'YA_IMPUTADO', 'PRE_IMPUTADO', 'PENDIENTE', 'REGULARIZADO', 'RECUPERADO'].includes(t.id);
+                                                                }
+                                                            }).map(t => <MenuItem key={t.id} value={t.id}>{t.label}</MenuItem>)}
+                                                        </Select>
+                                                    </FormControl>
+                                                </Box>
                                             </TableCell>
-                                            <TableCell align="center">
+                                            <TableCell align="center" sx={{ borderRight: '1px solid #e0e0e0' }}>
                                                 <Checkbox
                                                     checked={imp.seg}
                                                     onChange={(e) => updateField(imp, 'seg', e.target.checked)}
@@ -838,9 +855,10 @@ export default function Dashboard() {
                                             {weekDays.map((d, i) => {
                                                 const dayKey = dayKeys[i];
                                                 return (
-                                                    <TableCell key={d.label} align="center" sx={{ p: '2px !important' }}>
+                                                    <TableCell key={d.label} align="center" sx={{ p: '2px !important', borderLeft: i === 0 ? '1px solid #e0e0e0 !important' : 'none !important', borderRight: i === weekDays.length - 1 ? '1px solid #e0e0e0 !important' : 'none !important' }}>
                                                         <InputBase
                                                             value={imp.hours[dayKey] === 0 ? '' : imp.hours[dayKey]}
+                                                            placeholder="-"
                                                             onChange={(e) => updateHours(imp, dayKey, e.target.value)}
                                                             disabled={isLocked}
                                                             inputProps={{
@@ -850,12 +868,18 @@ export default function Dashboard() {
                                                                 style: { textAlign: 'center' }
                                                             }}
                                                             sx={{
-                                                                width: '100%',
-                                                                border: '1px solid rgba(0,0,0,0.1)',
-                                                                borderRadius: 4,
-                                                                padding: '2px', // Compact padding
-                                                                backgroundColor: isLocked ? '#f5f5f5' : 'rgba(255,255,255,0.5)',
+                                                                width: '40px', // Fixed width
+                                                                height: '32px', // Consistency
+                                                                margin: '0 auto', // Center in cell
                                                                 fontSize: '0.85rem',
+                                                                border: '1px solid #e0e0e0', // Subtle border
+                                                                borderRadius: 1, // Rounded corners
+                                                                bgcolor: isLocked ? 'transparent' : '#fff',
+                                                                '&:hover': {
+                                                                    borderColor: isLocked ? '#e0e0e0' : 'primary.main',
+                                                                },
+                                                                '& input': { textAlign: 'center', cursor: isLocked ? 'default' : 'text', py: 0.5 },
+                                                                '& input::placeholder': { color: '#ccc', opacity: 1 },
                                                                 '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
                                                                     '-webkit-appearance': 'none',
                                                                     margin: 0,
@@ -868,10 +892,10 @@ export default function Dashboard() {
                                                     </TableCell>
                                                 );
                                             })}
-                                            <TableCell align="center" sx={{ fontWeight: 'bold' }}>
+                                            <TableCell align="right" sx={{ fontWeight: 'bold', borderLeft: '1px solid #e0e0e0', pr: 1 }}>
                                                 {Object.values(imp.hours).reduce((a, b) => a + b, 0)}h
                                             </TableCell>
-                                            <TableCell align="center">
+                                            <TableCell align="left" sx={{ pl: 0 }}>
                                                 {!isLocked && (
                                                     <IconButton onClick={() => deleteImputation(imp.id)} size="small" color="error">
                                                         <DeleteOutline fontSize="small" />
