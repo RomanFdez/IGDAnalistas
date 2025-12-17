@@ -12,8 +12,9 @@ services:
       - mongo
     restart: unless-stopped
     volumes:
-      - .:/app
-      - /app/node_modules
+      # - .:/app  <-- Removed to allow Docker image build artifacts (dist folder) to be visible
+      # - /app/node_modules <-- Removed as we are not mounting source code
+
 
   mongo:
     image: mongo:4.4
