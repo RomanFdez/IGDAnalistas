@@ -7,9 +7,9 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies (production only, but we need devDependencies for build currently if we build inside, wait)
-# Vite build needs devDependecies.
-RUN npm install
+# Install dependencies (use npm ci for deterministic builds and cache for speed)
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # Copy source code
 COPY . .
