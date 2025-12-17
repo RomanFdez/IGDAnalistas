@@ -332,6 +332,7 @@ function MonthlyStatsTab() {
     // Helper to get total for a set of IDs in a specific month index
     const getMonthSum = (monthIdx, ids) => {
         return ids.reduce((acc, id) => {
+            if (disabledTypes.includes(id)) return acc; // Skip disabled types
             const row = matrixData.find(r => r.id === id);
             return acc + (row?.months[monthIdx] || 0);
         }, 0);
