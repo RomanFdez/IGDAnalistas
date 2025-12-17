@@ -6,6 +6,8 @@ import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Tabs, Tab, Checkbox
 } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import { startOfMonth, endOfMonth, eachWeekOfInterval, getISOWeek, format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 // Helper to get Year and Week Number from "2023-W01"
 const parseWeekId = (weekId) => {
@@ -30,6 +32,31 @@ function ImputationStatsTab() {
     const [filterYear, setFilterYear] = useState(currentYear);
     const [filterMonth, setFilterMonth] = useState('ALL');
     const [filterWeek, setFilterWeek] = useState('ALL');
+    const [groupComputable, setGroupComputable] = useState(false);
+
+    // Available Weeks Calculation
+    const availableWeeks = useMemo(() => {
+        if (filterMonth === 'ALL') {
+            // If no month selected, return generic 1-53
+            return Array.from({ length: 53 }, (_, i) => ({ val: i + 1, label: `Semana ${i + 1}` }));
+        }
+
+        try {
+            const start = startOfMonth(new Date(filterYear, filterMonth));
+            const end = endOfMonth(start);
+            return eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map(d => {
+                const w = getISOWeek(d);
+                return { val: w, label: `Semana ${w} (${format(d, 'd MMM', { locale: es })})` };
+            });
+        } catch (e) {
+            return [];
+        }
+    }, [filterYear, filterMonth]);
+
+    // Reset week when month changes
+    React.useEffect(() => {
+        setFilterWeek('ALL');
+    }, [filterYear, filterMonth]);
 
     // Processing Data
     const filteredData = useMemo(() => {
@@ -52,6 +79,20 @@ function ImputationStatsTab() {
         });
     }, [imputations, filterYear, filterMonth, filterWeek]);
 
+    // Column Definitions based on Grouping
+    const tableColumns = useMemo(() => {
+        if (!groupComputable) {
+            return taskTypes;
+        }
+        // Logic: Group all that are computable === true (or undef/true).
+        // Show individual cols for computable === false
+        const nonComputable = taskTypes.filter(t => t.computesInWeek === false);
+        return [
+            { id: 'COMPUTABLE_GROUP', label: 'Computables', color: '#e8f5e9', isGroup: true },
+            ...nonComputable
+        ];
+    }, [taskTypes, groupComputable]);
+
     // Pivot Data: User -> { [TypeId]: hours, total: hours }
     const pivotData = useMemo(() => {
         const userMap = {};
@@ -62,9 +103,16 @@ function ImputationStatsTab() {
                 id: u.id,
                 name: u.name,
                 total: 0,
-                byType: {}
+                byType: {},
+                computableTotal: 0
             };
-            taskTypes.forEach(t => userMap[u.id].byType[t.id] = 0);
+            if (!groupComputable) {
+                taskTypes.forEach(t => userMap[u.id].byType[t.id] = 0);
+            } else {
+                // Init grouped map
+                userMap[u.id].byType['COMPUTABLE_GROUP'] = 0;
+                taskTypes.filter(t => t.computesInWeek === false).forEach(t => userMap[u.id].byType[t.id] = 0);
+            }
         });
 
         filteredData.forEach(imp => {
@@ -72,13 +120,25 @@ function ImputationStatsTab() {
 
             // Calculate total hours in this imputation
             const hours = Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0);
+            const typeConfig = taskTypes.find(t => t.id === imp.type);
+            const isComputable = typeConfig?.computesInWeek !== false;
 
-            userMap[imp.userId].byType[imp.type] = (userMap[imp.userId].byType[imp.type] || 0) + hours;
             userMap[imp.userId].total += hours;
+
+            if (groupComputable) {
+                if (isComputable) {
+                    userMap[imp.userId].byType['COMPUTABLE_GROUP'] += hours;
+                    userMap[imp.userId].computableTotal += hours;
+                } else {
+                    userMap[imp.userId].byType[imp.type] = (userMap[imp.userId].byType[imp.type] || 0) + hours;
+                }
+            } else {
+                userMap[imp.userId].byType[imp.type] = (userMap[imp.userId].byType[imp.type] || 0) + hours;
+            }
         });
 
         return Object.values(userMap);
-    }, [filteredData, USERS, taskTypes]);
+    }, [filteredData, USERS, taskTypes, groupComputable]);
 
     // Chart Data: Total hours per Type (for the filtered period)
     const chartData = useMemo(() => {
@@ -142,8 +202,8 @@ function ImputationStatsTab() {
                                 onChange={(e) => setFilterWeek(e.target.value)}
                             >
                                 <MenuItem value="ALL">Todas</MenuItem>
-                                {Array.from({ length: 53 }, (_, i) => i + 1).map(w => (
-                                    <MenuItem key={w} value={w}>Semana {w}</MenuItem>
+                                {availableWeeks.map(w => (
+                                    <MenuItem key={w.val} value={w.val}>{w.label}</MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
@@ -152,13 +212,26 @@ function ImputationStatsTab() {
             </Paper>
 
             {/* Matrix Table */}
-            <Typography variant="h6" sx={{ mb: 2 }}>Desglose por Usuario y Tipo de Tarea (Horas)</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Desglose por Usuario y Tipo de Tarea (Horas)</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Checkbox
+                        checked={groupComputable}
+                        onChange={(e) => setGroupComputable(e.target.checked)}
+                        size="small"
+                    />
+                    <Typography variant="body2" onClick={() => setGroupComputable(!groupComputable)} sx={{ cursor: 'pointer' }}>
+                        Agrupar computables semana
+                    </Typography>
+                </Box>
+            </Box>
+
             <TableContainer component={Paper} variant="outlined" sx={{ mb: 4, maxHeight: 600 }}>
                 <Table stickyHeader size="small">
                     <TableHead>
                         <TableRow>
                             <TableCell sx={{ fontWeight: 'bold', bgcolor: 'grey.100' }}>Usuario</TableCell>
-                            {taskTypes.map(type => (
+                            {tableColumns.map(type => (
                                 <TableCell key={type.id} align="center" sx={{ bgcolor: type.color, color: 'text.primary', fontWeight: 'bold', minWidth: 60, px: 0.5, fontSize: '0.75rem' }}>
                                     {type.label}
                                 </TableCell>
@@ -170,7 +243,7 @@ function ImputationStatsTab() {
                         {pivotData.map((row) => (
                             <TableRow key={row.id} hover>
                                 <TableCell sx={{ fontWeight: 'medium' }}>{row.name}</TableCell>
-                                {taskTypes.map(type => (
+                                {tableColumns.map(type => (
                                     <TableCell key={type.id} align="center" sx={{ px: 0.5 }}>
                                         {row.byType[type.id] > 0 ? (
                                             <Typography variant="body2" fontSize="0.8rem">{row.byType[type.id]}</Typography>

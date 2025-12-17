@@ -158,6 +158,15 @@ app.put('/api/tasks/:id', async (req, res) => {
     }
 });
 
+app.delete('/api/tasks/:id', async (req, res) => {
+    try {
+        await Task.deleteOne({ id: req.params.id });
+        res.json({ message: 'Deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // 5. Imputations
 app.post('/api/imputations', async (req, res) => {
     // Upsert logic: if ID exists, update, else create

@@ -10,7 +10,8 @@ const TaskSchema = new mongoose.Schema({
     targetRoles: [{ type: String }],
     assignedUserIds: [{ type: String }], // Array of User IDs
     isGlobal: { type: Boolean, default: false },
-    utes: { type: Number, default: 0 } // Budget in hours
+    utes: { type: Number, default: 0 }, // Budget in hours
+    hito: { type: String } // Added hito field
 });
 
 export default mongoose.model('Task', TaskSchema);

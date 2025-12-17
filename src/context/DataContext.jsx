@@ -64,13 +64,20 @@ export const DataProvider = ({ children }) => {
         setTasks(prev => [...prev, taskWithId]);
 
         try {
-            await fetch('/api/tasks', {
+            const res = await fetch('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(taskWithId)
             });
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || errData.message || 'Error creating task');
+            }
         } catch (error) {
             console.error("Error creating task:", error);
+            // Revert optimistic
+            setTasks(prev => prev.filter(t => t.id !== taskWithId.id));
+            throw error;
         }
         return taskWithId;
     };
@@ -113,13 +120,17 @@ export const DataProvider = ({ children }) => {
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t));
 
         try {
-            await fetch(`/api/tasks/${taskId}`, {
+            const res = await fetch(`/api/tasks/${taskId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updates)
             });
+            if (!res.ok) throw new Error('Failed to update task');
         } catch (error) {
             console.error("Error updating task:", error);
+            // Revert optimistic? Harder to do without previous state.
+            // For now just throw so consumer knows.
+            throw error;
         }
     };
 
@@ -155,6 +166,7 @@ export const DataProvider = ({ children }) => {
             });
         } catch (error) {
             console.error("Error saving imputation:", error);
+            throw error;
         }
     };
 

@@ -6,39 +6,39 @@ import {
 } from '@mui/material';
 
 export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdit }) {
-    const { addTask, updateTask } = useData();
+    const { addTask, updateTask, tasks } = useData();
 
     // Initialize state with taskToEdit values if present, or defaults
-    const [newCode, setNewCode] = useState(taskToEdit?.code || '');
     const [newName, setNewName] = useState(taskToEdit?.name || '');
     const [newDesc, setNewDesc] = useState(taskToEdit?.description || '');
+    const [newHito, setNewHito] = useState(taskToEdit?.hito || '');
     const [newUtes, setNewUtes] = useState(taskToEdit?.utes || '');
 
     // Update state when taskToEdit changes or dialog opens
     React.useEffect(() => {
         if (open) {
-            setNewCode(taskToEdit?.code || '');
             setNewName(taskToEdit?.name || '');
             setNewDesc(taskToEdit?.description || '');
+            setNewHito(taskToEdit?.hito || '');
             setNewUtes(taskToEdit?.utes || '');
         }
     }, [open, taskToEdit]);
 
     // State for validation errors
-    const [codeError, setCodeError] = useState(false);
     const [nameError, setNameError] = useState(false);
+    const [hitoError, setHitoError] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         let hasError = false;
 
-        // Validate code
-        if (!newCode.trim()) {
-            setCodeError(true);
+        // Validate hito
+        if (!newHito.trim()) {
+            setHitoError(true);
             hasError = true;
         } else {
-            setCodeError(false);
+            setHitoError(false);
         }
 
         // Validate name
@@ -57,24 +57,44 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
             updateTask(taskToEdit.id, {
                 name: newName,
                 description: newDesc,
+                hito: newHito,
                 utes: newUtes ? Number(newUtes) : 0
             });
             if (onTaskCreated) onTaskCreated(taskToEdit);
         } else {
+            // Generate Code: Hito + "-" + Incremental
+            // Find counts of tasks with same Hito to determine next index
+            // We'll use a simple regex to find the max index used for this Hito
+            // Assumed format: HITO-1, HITO-2, etc.
+            const prefix = `${newHito.trim()}-`;
+            const matchingAndFormatted = tasks.filter(t => t.code && t.code.startsWith(prefix));
+
+            let maxIndex = 0;
+            matchingAndFormatted.forEach(t => {
+                const rest = t.code.substring(prefix.length);
+                const num = parseInt(rest, 10);
+                if (!isNaN(num) && num > maxIndex) {
+                    maxIndex = num;
+                }
+            });
+
+            const nextCode = `${prefix}${maxIndex + 1}`;
+
             // Create task (helper in DataContext assigns user)
             const createdTask = await addTask({
-                code: newCode,
+                code: nextCode,
                 name: newName,
                 description: newDesc,
+                hito: newHito,
                 utes: newUtes ? Number(newUtes) : 0
             });
             if (onTaskCreated) onTaskCreated(createdTask);
         }
 
         // Reset form
-        setNewCode('');
         setNewName('');
         setNewDesc('');
+        setNewHito('');
         setNewUtes('');
 
         onClose();
@@ -89,15 +109,15 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
                         <TextField
                             autoFocus={!taskToEdit}
                             margin="dense"
-                            label="Código Tarea"
+                            label="Hito"
+                            value={newHito}
+                            onChange={(e) => setNewHito(e.target.value)}
                             fullWidth
                             variant="outlined"
-                            value={newCode}
-                            onChange={(e) => setNewCode(e.target.value)}
                             required
-                            disabled={!!taskToEdit} // Disable editing of code
-                            error={codeError}
-                            helperText={codeError ? "El código es requerido" : ""}
+                            error={hitoError}
+                            helperText={hitoError ? "El Hito es requerido para generar el código" : "Ej: Fase1 (Generará Fase1-1, Fase1-2...)"}
+                            placeholder="Ej: Entrega Fase 1"
                         />
                         <TextField
                             autoFocus={!!taskToEdit}

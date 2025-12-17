@@ -149,9 +149,9 @@ function UsersTab() {
 
     const handleAddUser = (e) => {
         e.preventDefault();
-        
+
         if (!newName.trim() || !newSurname.trim() || !newPassword.trim()) {
-             return;
+            return;
         }
 
         if (newPassword !== confirmNewPassword) {

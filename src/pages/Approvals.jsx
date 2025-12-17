@@ -26,6 +26,7 @@ export default function Approvals() {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedWeek, setSelectedWeek] = useState(getISOWeek(new Date()));
+    const [selectedAnalystId, setSelectedAnalystId] = useState(''); // '' means All
 
     const [taskDescription, setTaskDescription] = useState(null);
 
@@ -85,7 +86,12 @@ export default function Approvals() {
 
     const isLocked = isWeekLocked(weekId);
     const weekImputations = imputations.filter(i => i.weekId === weekId);
-    const usersWithData = USERS.filter(u => u.roles.includes('ANALYST'));
+
+    // Filter Analysts
+    const allAnalysts = USERS.filter(u => u.roles.includes('ANALYST')).sort((a, b) => a.name.localeCompare(b.name));
+    const usersWithData = selectedAnalystId
+        ? allAnalysts.filter(u => u.id === selectedAnalystId)
+        : allAnalysts;
 
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'task', direction: 'asc' });
@@ -102,7 +108,8 @@ export default function Approvals() {
 
         // Calculate Totals based on 'computesInWeek'
         let computable = 0;
-        let other = 0;
+        let otherTotal = 0;
+        let otherBreakdown = {};
 
         userImps.forEach(i => {
             const total = Object.values(i.hours).reduce((a, b) => a + b, 0);
@@ -115,10 +122,11 @@ export default function Approvals() {
             if (isComputable) {
                 computable += total;
             } else {
-                other += total;
+                otherTotal += total;
+                otherBreakdown[i.type] = (otherBreakdown[i.type] || 0) + total;
             }
         });
-        const totalHours = computable + other;
+        const totalHours = computable + otherTotal;
 
         // Enhance & Filter
         let enhancedImps = userImps.map(imp => {
@@ -127,7 +135,7 @@ export default function Approvals() {
         }).filter(imp => {
             if (!searchTerm) return true;
             const term = searchTerm.toLowerCase();
-            return imp.task?.code.toLowerCase().includes(term) || imp.task?.name.toLowerCase().includes(term);
+            return imp.task?.code.toLowerCase().includes(term) || imp.task?.name.toLowerCase().includes(term) || imp.task?.hito?.toLowerCase().includes(term);
         });
 
         // SORTING LOGIC FOR LIST DISPLAY (Widget Order Requirement: Worked > Jira > Others Alpha)
@@ -143,8 +151,13 @@ export default function Approvals() {
             if (sortConfig.key) {
                 let valA, valB;
                 if (sortConfig.key === 'task') {
-                    valA = a.task?.code + a.task?.name;
-                    valB = b.task?.code + b.task?.name;
+                    // Sort by Hito - Name as requested for display
+                    const hitoA = a.task?.hito || '';
+                    const hitoB = b.task?.hito || '';
+                    const nameA = a.task?.name || '';
+                    const nameB = b.task?.name || '';
+                    valA = `${hitoA} - ${nameA}`;
+                    valB = `${hitoB} - ${nameB}`;
                 } else if (sortConfig.key === 'type') {
                     valA = a.type;
                     valB = b.type;
@@ -169,11 +182,11 @@ export default function Approvals() {
                 if (labelA !== labelB) return labelA.localeCompare(labelB);
             }
 
-            // Finally by Task Code
-            return a.task?.code.localeCompare(b.task?.code || '');
+            // Finally by Task Hito (replacing Code)
+            return (a.task?.hito || '').localeCompare(b.task?.hito || '');
         });
 
-        return { user: u, totalHours, computable, other, imputations: enhancedImps };
+        return { user: u, totalHours, computable, other: otherTotal, otherBreakdown, imputations: enhancedImps };
     });
 
     const handleExportExcel = () => {
@@ -183,6 +196,7 @@ export default function Approvals() {
             return {
                 Semana: weekId,
                 Analista: u?.name || 'Unknown',
+                Hito: t?.hito,
                 CodigoTarea: t?.code,
                 NombreTarea: t?.name,
                 Tipo: imp.type,
@@ -246,6 +260,20 @@ export default function Approvals() {
                             {availableWeeks.length === 0 && <MenuItem value="">Sin semanas</MenuItem>}
                         </Select>
                     </FormControl>
+
+                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                        <InputLabel>Analista</InputLabel>
+                        <Select
+                            value={selectedAnalystId}
+                            label="Analista"
+                            onChange={e => setSelectedAnalystId(e.target.value)}
+                        >
+                            <MenuItem value=""><em>Todos los analistas</em></MenuItem>
+                            {allAnalysts.map(u => (
+                                <MenuItem key={u.id} value={u.id}>{u.name}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 </Paper>
             </Box>
 
@@ -256,7 +284,7 @@ export default function Approvals() {
                     <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                             <TextField
-                                placeholder="Buscar tarea por código o nombre..."
+                                placeholder="Buscar tarea por hito, código o nombre..."
                                 size="small"
                                 fullWidth
                                 value={searchTerm}
@@ -323,137 +351,351 @@ export default function Approvals() {
 
             {/* Analysts Grid */}
             <Grid container spacing={3}>
-                {usersWithData.map(u => {
-                    const summary = userSummaries.find(s => s.user.id === u.id) || { user: u, totalHours: 0, workedAndJira: 0, other: 0, imputations: [] };
-                    return (
-                        <Grid item xs={12} key={u.id}>
+                {!selectedAnalystId ? (
+                    <>
+                        {/* SUMMARY TABLE OF HOURS PER ANALYST */}
+                        <Grid item xs={12}>
                             <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                                <Box sx={{ p: 2, bgcolor: 'background.default', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>{u.name.charAt(0)}</Avatar>
-                                        <Box>
-                                            <Typography variant="subtitle2" fontWeight="bold">{u.name}</Typography>
-                                            <Typography variant="caption" color="text.secondary">{summary.imputations.length} tareas</Typography>
-                                        </Box>
-                                    </Box>
-                                    <Box sx={{ textAlign: 'right' }}>
-                                        <Tooltip title="Horas Computables (Trabajado + Jira + etc.)">
-                                            <Chip
-                                                label={`${summary.computable}h`}
-                                                color={summary.computable >= 40 ? 'success' : 'warning'}
-                                                size="small"
-                                                sx={{ fontWeight: 'bold' }}
-                                            />
-                                        </Tooltip>
-                                        {summary.other > 0 && (
-                                            <Tooltip title="Otras Horas (No computan)">
-                                                <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
-                                                    Otras: {summary.other}h
-                                                </Typography>
-                                            </Tooltip>
-                                        )}
-                                    </Box>
+                                <Box sx={{ p: 2, bgcolor: 'background.default', borderBottom: '1px solid #eee' }}>
+                                    <Typography variant="subtitle2" fontWeight="bold">Resumen de Horas por Analista</Typography>
                                 </Box>
-
                                 <Box sx={{ p: 0 }}>
-                                    {summary.imputations.length > 0 ? (
-                                        <Table size="small">
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell
-                                                        width="40%"
-                                                        onClick={() => handleSort('task')}
-                                                        sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-                                                    >
-                                                        Tarea {sortConfig.key === 'task' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                                                    </TableCell>
-                                                    <TableCell
-                                                        width="15%"
-                                                        onClick={() => handleSort('type')}
-                                                        sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-                                                    >
-                                                        Tipo {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                                                    </TableCell>
-                                                    <TableCell align="center" width="5%">SEG</TableCell>
-                                                    <TableCell align="center">L</TableCell>
-                                                    <TableCell align="center">M</TableCell>
-                                                    <TableCell align="center">X</TableCell>
-                                                    <TableCell align="center">J</TableCell>
-                                                    <TableCell align="center">V</TableCell>
-                                                    <TableCell align="center" sx={{ fontWeight: 'bold' }}>Total</TableCell>
-                                                    <TableCell align="center">OK</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {summary.imputations.map(imp => {
-                                                    const total = Object.values(imp.hours).reduce((a, b) => a + b, 0);
-                                                    const color = theme.palette.taskTypes[imp.type];
-                                                    const typeLabel = taskTypes.find(t => t.id === imp.type)?.label;
-                                                    const isApproved = imp.approved === true;
-                                                    return (
-                                                        <TableRow
-                                                            key={imp.id}
-                                                            sx={{
-                                                                bgcolor: color,
-                                                                '& .MuiTypography-root': { color: isApproved ? 'text.disabled' : 'inherit' },
-                                                                '& .MuiTableCell-root': { color: isApproved ? 'text.disabled' : 'inherit' }
-                                                            }}
-                                                        >
-                                                            <TableCell
-                                                                sx={{ display: 'flex', alignItems: 'center', gap: 1, borderBottom: 'none' }}
-                                                            >
-                                                                <IconButton
-                                                                    size="small"
-                                                                    onClick={() => setTaskDescription(imp.task)}
-                                                                    color={isApproved ? "default" : "info"}
-                                                                >
-                                                                    <InfoOutlined fontSize="small" />
-                                                                </IconButton>
-                                                                <Box>
-                                                                    <Typography variant="body2" fontWeight="medium">{imp.task?.code}</Typography>
-                                                                    <Typography variant="caption" color={isApproved ? "text.disabled" : "text.secondary"} noWrap sx={{ display: 'block', maxWidth: 300 }}>
-                                                                        {imp.task?.name}
-                                                                    </Typography>
-                                                                </Box>
+                                    {(() => {
+                                        // 1. Identify all non-computable types that have at least one entry > 0 across all summaries
+                                        const otherTypesSet = new Set();
+                                        userSummaries.forEach(s => {
+                                            if (s.otherBreakdown) {
+                                                Object.keys(s.otherBreakdown).forEach(typeId => otherTypesSet.add(typeId));
+                                            }
+                                        });
+                                        const otherTypesPresent = Array.from(otherTypesSet).sort();
+
+                                        return (
+                                            <Table size="small">
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell>Analista</TableCell>
+                                                        <TableCell align="center">Horas Computables</TableCell>
+                                                        {otherTypesPresent.map(typeId => {
+                                                            const label = taskTypes.find(t => t.id === typeId)?.label || typeId;
+                                                            return <TableCell key={typeId} align="center">{label}</TableCell>;
+                                                        })}
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {userSummaries.sort((a, b) => a.user.name.localeCompare(b.user.name)).map(summary => (
+                                                        <TableRow key={summary.user.id}>
+                                                            <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                                <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>{summary.user.name.charAt(0)}</Avatar>
+                                                                <Typography variant="body2">{summary.user.name}</Typography>
                                                             </TableCell>
-                                                            <TableCell sx={{ fontSize: '0.75rem' }}>{typeLabel}</TableCell>
                                                             <TableCell align="center">
-                                                                <Checkbox
-                                                                    checked={!!imp.seg}
-                                                                    size="small"
-                                                                    disabled
-                                                                    sx={{ p: 0 }}
-                                                                />
+                                                                <Tooltip title={`Horas Computables (${taskTypes.filter(t => t.computesInWeek !== false).map(t => t.label).join(', ')})`}>
+                                                                    <Chip
+                                                                        label={`${summary.computable}h`}
+                                                                        color={summary.computable >= 40 ? 'success' : 'warning'}
+                                                                        size="small"
+                                                                        sx={{ fontWeight: 'bold' }}
+                                                                    />
+                                                                </Tooltip>
                                                             </TableCell>
-                                                            <TableCell align="center">{imp.hours.mon || '-'}</TableCell>
-                                                            <TableCell align="center">{imp.hours.tue || '-'}</TableCell>
-                                                            <TableCell align="center">{imp.hours.wed || '-'}</TableCell>
-                                                            <TableCell align="center">{imp.hours.thu || '-'}</TableCell>
-                                                            <TableCell align="center">{imp.hours.fri || '-'}</TableCell>
-                                                            <TableCell align="center" sx={{ fontWeight: 'bold' }}>{total}</TableCell>
-                                                            <TableCell align="center">
-                                                                <Checkbox
-                                                                    checked={isApproved}
-                                                                    onChange={(e) => handleToggleApproved(imp, e.target.checked)}
-                                                                    size="small"
-                                                                    color="success"
-                                                                />
-                                                            </TableCell>
+                                                            {otherTypesPresent.map(typeId => {
+                                                                const val = summary.otherBreakdown?.[typeId] || 0;
+                                                                return (
+                                                                    <TableCell key={typeId} align="center">
+                                                                        {val > 0 ? (
+                                                                            <Typography variant="caption" color="text.secondary">
+                                                                                {val}h
+                                                                            </Typography>
+                                                                        ) : (
+                                                                            <Typography variant="caption" color="text.disabled">-</Typography>
+                                                                        )}
+                                                                    </TableCell>
+                                                                );
+                                                            })}
                                                         </TableRow>
-                                                    )
-                                                })}
-                                            </TableBody>
-                                        </Table>
-                                    ) : (
-                                        <Box sx={{ p: 3, textAlign: 'center' }}>
-                                            <Typography variant="caption" color="text.secondary">Sin imputaciones {searchTerm ? 'que coincidan con la búsqueda' : 'registradas esta semana'}.</Typography>
-                                        </Box>
-                                    )}
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        );
+                                    })()}
                                 </Box>
                             </Card>
                         </Grid>
-                    );
-                })}
+
+                        {/* UNIFIED VIEW: ALL ANALYSTS IMPUTATIONS */}
+                        <Grid item xs={12}>
+                            <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                                <Box sx={{ p: 2, bgcolor: 'background.default', borderBottom: '1px solid #eee' }}>
+                                    <Typography variant="subtitle2" fontWeight="bold">Detalle de Imputaciones (Consolidado)</Typography>
+                                    <Typography variant="caption" color="text.secondary">Todas las tareas de todos los analistas</Typography>
+                                </Box>
+                                <Box sx={{ p: 0 }}>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell
+                                                    width="15%"
+                                                    onClick={() => handleSort('analyst')}
+                                                    sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                                                >
+                                                    Analista {sortConfig.key === 'analyst' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                                </TableCell>
+                                                <TableCell
+                                                    width="35%"
+                                                    onClick={() => handleSort('task')}
+                                                    sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                                                >
+                                                    Tarea {sortConfig.key === 'task' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                                </TableCell>
+                                                <TableCell
+                                                    width="10%"
+                                                    onClick={() => handleSort('type')}
+                                                    sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                                                >
+                                                    Tipo {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                                </TableCell>
+                                                <TableCell align="center" width="5%">SEG</TableCell>
+                                                <TableCell align="center">L</TableCell>
+                                                <TableCell align="center">M</TableCell>
+                                                <TableCell align="center">X</TableCell>
+                                                <TableCell align="center">J</TableCell>
+                                                <TableCell align="center">V</TableCell>
+                                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>Total</TableCell>
+                                                <TableCell align="center">OK</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {userSummaries.flatMap(s => s.imputations.map(i => ({ ...i, userName: s.user.name }))).length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={11} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                                                        Sin imputaciones registradas.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                userSummaries.flatMap(s => s.imputations.map(i => ({ ...i, userName: s.user.name })))
+                                                    .sort((a, b) => {
+                                                        if (sortConfig.key === 'analyst') {
+                                                            const res = a.userName.localeCompare(b.userName);
+                                                            return sortConfig.direction === 'asc' ? res : -res;
+                                                        }
+                                                        // If sorting by task or type, rely on the values
+                                                        if (sortConfig.key === 'task') {
+                                                            const valA = `${a.task?.hito || ''} - ${a.task?.name || ''}`;
+                                                            const valB = `${b.task?.hito || ''} - ${b.task?.name || ''}`;
+                                                            const res = valA.localeCompare(valB);
+                                                            if (res !== 0) return sortConfig.direction === 'asc' ? res : -res;
+                                                        }
+                                                        if (sortConfig.key === 'type') {
+                                                            const res = a.type.localeCompare(b.type);
+                                                            if (res !== 0) return sortConfig.direction === 'asc' ? res : -res;
+                                                        }
+
+                                                        // Default tie-breaker: Analyst Name -> Task Hito
+                                                        const userRes = a.userName.localeCompare(b.userName);
+                                                        if (userRes !== 0) return userRes;
+                                                        return (a.task?.hito || '').localeCompare(b.task?.hito || '');
+                                                    })
+                                                    .map(imp => {
+                                                        const total = Object.values(imp.hours).reduce((a, b) => a + b, 0);
+                                                        const color = theme.palette.taskTypes[imp.type];
+                                                        const typeLabel = taskTypes.find(t => t.id === imp.type)?.label;
+                                                        const isApproved = imp.approved === true;
+
+                                                        return (
+                                                            <TableRow
+                                                                key={imp.id}
+                                                                sx={{
+                                                                    bgcolor: color,
+                                                                    '& .MuiTypography-root': { color: isApproved ? 'text.disabled' : 'inherit' },
+                                                                    '& .MuiTableCell-root': { color: isApproved ? 'text.disabled' : 'inherit' }
+                                                                }}
+                                                            >
+                                                                <TableCell sx={{ fontWeight: 'medium' }}>{imp.userName}</TableCell>
+                                                                <TableCell
+                                                                    sx={{ display: 'flex', alignItems: 'center', gap: 1, borderBottom: 'none' }}
+                                                                >
+                                                                    <IconButton
+                                                                        size="small"
+                                                                        onClick={() => setTaskDescription(imp.task)}
+                                                                        color={isApproved ? "default" : "info"}
+                                                                    >
+                                                                        <InfoOutlined fontSize="small" />
+                                                                    </IconButton>
+                                                                    <Box>
+                                                                        <Typography variant="body2" fontWeight="medium">
+                                                                            {imp.task?.code === 'Estructural' ? 'Estructural' : `${imp.task?.hito || '-'} - ${imp.task?.name}`}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </TableCell>
+                                                                <TableCell sx={{ fontSize: '0.75rem' }}>{typeLabel}</TableCell>
+                                                                <TableCell align="center">
+                                                                    <Checkbox
+                                                                        checked={!!imp.seg}
+                                                                        size="small"
+                                                                        disabled
+                                                                        sx={{ p: 0 }}
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell align="center">{imp.hours.mon || '-'}</TableCell>
+                                                                <TableCell align="center">{imp.hours.tue || '-'}</TableCell>
+                                                                <TableCell align="center">{imp.hours.wed || '-'}</TableCell>
+                                                                <TableCell align="center">{imp.hours.thu || '-'}</TableCell>
+                                                                <TableCell align="center">{imp.hours.fri || '-'}</TableCell>
+                                                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>{total}</TableCell>
+                                                                <TableCell align="center">
+                                                                    <Checkbox
+                                                                        checked={isApproved}
+                                                                        onChange={(e) => handleToggleApproved(imp, e.target.checked)}
+                                                                        size="small"
+                                                                        color="success"
+                                                                        disabled={!isLocked}
+                                                                    />
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </Box>
+                            </Card>
+                        </Grid>
+                    </>
+                ) : (
+                    /* INDIVIDUAL CARDS VIEW */
+                    usersWithData.map(u => {
+                        const summary = userSummaries.find(s => s.user.id === u.id) || { user: u, totalHours: 0, workedAndJira: 0, other: 0, imputations: [] };
+                        return (
+                            <Grid item xs={12} key={u.id}>
+                                <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                                    <Box sx={{ p: 2, bgcolor: 'background.default', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>{u.name.charAt(0)}</Avatar>
+                                            <Box>
+                                                <Typography variant="subtitle2" fontWeight="bold">{u.name}</Typography>
+                                                <Typography variant="caption" color="text.secondary">{summary.imputations.length} tareas</Typography>
+                                            </Box>
+                                        </Box>
+                                        <Box sx={{ textAlign: 'right' }}>
+                                            <Tooltip title={`Horas Computables (${taskTypes.filter(t => t.computesInWeek !== false).map(t => t.label).join(', ')})`}>
+                                                <Chip
+                                                    label={`${summary.computable}h`}
+                                                    color={summary.computable >= 40 ? 'success' : 'warning'}
+                                                    size="small"
+                                                    sx={{ fontWeight: 'bold' }}
+                                                />
+                                            </Tooltip>
+                                            {Object.entries(summary.otherBreakdown || {}).map(([typeId, hours]) => {
+                                                const typeLabel = taskTypes.find(t => t.id === typeId)?.label || typeId;
+                                                return (
+                                                    <Typography key={typeId} variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                        {typeLabel}: {hours}h
+                                                    </Typography>
+                                                );
+                                            })}
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ p: 0 }}>
+                                        {summary.imputations.length > 0 ? (
+                                            <Table size="small">
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell
+                                                            width="40%"
+                                                            onClick={() => handleSort('task')}
+                                                            sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                                                        >
+                                                            Tarea {sortConfig.key === 'task' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                                        </TableCell>
+                                                        <TableCell
+                                                            width="15%"
+                                                            onClick={() => handleSort('type')}
+                                                            sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                                                        >
+                                                            Tipo {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                                                        </TableCell>
+                                                        <TableCell align="center" width="5%">SEG</TableCell>
+                                                        <TableCell align="center">L</TableCell>
+                                                        <TableCell align="center">M</TableCell>
+                                                        <TableCell align="center">X</TableCell>
+                                                        <TableCell align="center">J</TableCell>
+                                                        <TableCell align="center">V</TableCell>
+                                                        <TableCell align="center" sx={{ fontWeight: 'bold' }}>Total</TableCell>
+                                                        <TableCell align="center">OK</TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {summary.imputations.map(imp => {
+                                                        const total = Object.values(imp.hours).reduce((a, b) => a + b, 0);
+                                                        const color = theme.palette.taskTypes[imp.type];
+                                                        const typeLabel = taskTypes.find(t => t.id === imp.type)?.label;
+                                                        const isApproved = imp.approved === true;
+                                                        return (
+                                                            <TableRow
+                                                                key={imp.id}
+                                                                sx={{
+                                                                    bgcolor: color,
+                                                                    '& .MuiTypography-root': { color: isApproved ? 'text.disabled' : 'inherit' },
+                                                                    '& .MuiTableCell-root': { color: isApproved ? 'text.disabled' : 'inherit' }
+                                                                }}
+                                                            >
+                                                                <TableCell
+                                                                    sx={{ display: 'flex', alignItems: 'center', gap: 1, borderBottom: 'none' }}
+                                                                >
+                                                                    <IconButton
+                                                                        size="small"
+                                                                        onClick={() => setTaskDescription(imp.task)}
+                                                                        color={isApproved ? "default" : "info"}
+                                                                    >
+                                                                        <InfoOutlined fontSize="small" />
+                                                                    </IconButton>
+                                                                    <Box>
+                                                                        <Typography variant="body2" fontWeight="medium">
+                                                                            {imp.task?.code === 'Estructural' ? 'Estructural' : `${imp.task?.hito || '-'} - ${imp.task?.name}`}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </TableCell>
+                                                                <TableCell sx={{ fontSize: '0.75rem' }}>{typeLabel}</TableCell>
+                                                                <TableCell align="center">
+                                                                    <Checkbox
+                                                                        checked={!!imp.seg}
+                                                                        size="small"
+                                                                        disabled
+                                                                        sx={{ p: 0 }}
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell align="center">{imp.hours.mon || '-'}</TableCell>
+                                                                <TableCell align="center">{imp.hours.tue || '-'}</TableCell>
+                                                                <TableCell align="center">{imp.hours.wed || '-'}</TableCell>
+                                                                <TableCell align="center">{imp.hours.thu || '-'}</TableCell>
+                                                                <TableCell align="center">{imp.hours.fri || '-'}</TableCell>
+                                                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>{total}</TableCell>
+                                                                <TableCell align="center">
+                                                                    <Checkbox
+                                                                        checked={isApproved}
+                                                                        onChange={(e) => handleToggleApproved(imp, e.target.checked)}
+                                                                        size="small"
+                                                                        color="success"
+                                                                        disabled={!isLocked}
+                                                                    />
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )
+                                                    })}
+                                                </TableBody>
+                                            </Table>
+                                        ) : (
+                                            <Box sx={{ p: 3, textAlign: 'center' }}>
+                                                <Typography variant="caption" color="text.secondary">Sin imputaciones {searchTerm ? 'que coincidan con la búsqueda' : 'registradas esta semana'}.</Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </Card>
+                            </Grid>
+                        );
+                    }))}
             </Grid>
 
             {/* Task Description Dialog */}
@@ -462,6 +704,11 @@ export default function Approvals() {
                     <Typography variant="h6" fontWeight="bold" gutterBottom>
                         {taskDescription?.code} - {taskDescription?.name}
                     </Typography>
+                    {taskDescription?.hito && (
+                        <Typography variant="subtitle2" color="primary" gutterBottom>
+                            Hito: {taskDescription.hito}
+                        </Typography>
+                    )}
                     <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
                         {taskDescription?.description || 'Sin descripción disponible.'}
                     </Typography>

@@ -7,13 +7,13 @@ import {
   TableContainer, TableHead, TableRow, Chip, IconButton, TextField,
   ToggleButtonGroup, ToggleButton, TablePagination, Grid, TableSortLabel,
   Card, CardContent, FormControl, InputLabel, Select, MenuItem, Divider,
-  Tooltip, Dialog, Tabs, Tab
+  Tooltip, Dialog, Tabs, Tab, Alert
 } from '@mui/material';
 import {
-  Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock, Edit, DeleteOutline, FileDownload, FileUpload
+  Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock, Edit, DeleteOutline, FileDownload, FileUpload, Assessment
 } from '@mui/icons-material';
 import TaskFormDialog from '../components/TaskFormDialog';
-import { getYear, getMonth, getISOWeek, setISOWeek, startOfYear, eachWeekOfInterval, endOfMonth, startOfMonth, format } from 'date-fns';
+import { getYear, getMonth, getISOWeek, getISOWeekYear, setISOWeek, startOfYear, eachWeekOfInterval, endOfMonth, startOfMonth, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
@@ -39,6 +39,7 @@ export default function Tasks() {
   // Summary Widget State
   const [summaryMode, setSummaryMode] = useState('ANUAL'); // ANUAL, MENSUAL, SEMANAL
   const [summaryYear, setSummaryYear] = useState(new Date().getFullYear());
+  const [balanceYear, setBalanceYear] = useState(new Date().getFullYear());
   const [summaryMonth, setSummaryMonth] = useState(new Date().getMonth());
   const [summaryWeek, setSummaryWeek] = useState('');
 
@@ -69,6 +70,8 @@ export default function Tasks() {
       const isAsc = order === 'asc';
       if (orderBy === 'code') {
         return isAsc ? a.code.localeCompare(b.code) : b.code.localeCompare(a.code);
+      } else if (orderBy === 'hito') {
+        return isAsc ? (a.hito || '').localeCompare(b.hito || '') : (b.hito || '').localeCompare(a.hito || '');
       } else {
         return isAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
       }
@@ -107,7 +110,7 @@ export default function Tasks() {
       }
 
       if (summaryMode === 'SEMANAL') {
-        if (impWeek !== summaryWeek) return;
+        if (imp.weekId !== summaryWeek) return;
       }
 
       // Sum hours
@@ -126,22 +129,24 @@ export default function Tasks() {
     const end = endOfMonth(start);
     return eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map(d => {
       const w = getISOWeek(d);
-      return { val: w, label: `Semana ${w} (${format(d, 'd MMM', { locale: es })})` };
+      const y = getISOWeekYear(d);
+      const val = `${y}-W${w}`;
+      return { val: val, label: `Semana ${w} (${format(d, 'd MMM', { locale: es })})` };
     });
   }, [summaryYear, summaryMonth, summaryMode]);
 
   // Set default week when weeks change
-  useMemo(() => {
+  React.useEffect(() => {
     if (summaryMode === 'SEMANAL' && availableWeeks.length > 0) {
       // If current selection is invalid, reset
       if (!availableWeeks.find(w => w.val === summaryWeek)) {
         setSummaryWeek(availableWeeks[0].val);
       }
     }
-  }, [availableWeeks, summaryMode]);
+  }, [availableWeeks, summaryMode, summaryWeek]);
 
   const handleExport = () => {
-    const headers = ['code', 'name', 'description', 'utes', 'active', 'permanent'];
+    const headers = ['code', 'name', 'description', 'utes', 'active', 'permanent', 'hito'];
     const csvContent = [
       headers.join(';'),
       ...myTasks.map(t => [
@@ -150,7 +155,8 @@ export default function Tasks() {
         `"${(t.description || '').replace(/"/g, '""')}"`, // Escape quotes
         t.utes || 0,
         t.active,
-        t.permanent
+        t.permanent,
+        `"${(t.hito || '').replace(/"/g, '""')}"`
       ].join(';'))
     ].join('\n');
 
@@ -166,15 +172,18 @@ export default function Tasks() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const text = e.target.result;
         const rows = text.split('\n').slice(1);
-        let count = 0;
-        rows.forEach(row => {
+
+        // 1. Parse and Deduplicate
+        const uniqueTasks = new Map();
+
+        rows.forEach((row) => {
           if (!row.trim()) return;
-          const cols = row.split(';'); // Check logic if descriptions contain semicolons? escaping needed.
-          // For simple usage:
+          const cols = row.split(';');
+
           if (cols.length < 2) return;
 
           const clean = (val) => val ? val.replace(/^"|"$/g, '').replace(/""/g, '"').trim() : '';
@@ -188,18 +197,29 @@ export default function Tasks() {
             description: clean(cols[2]),
             utes: Number(clean(cols[3])) || 0,
             active: cols[4] !== 'false',
-            permanent: cols[5] === 'true'
+            permanent: cols[5] === 'true',
+            hito: clean(cols[6])
           };
 
+          // Store in Map, this ensures only the last occurrence (or first if we checked existence) is kept. 
+          // Usually last-write-wins is standard for imports unless specified otherwise.
+          // User asked "only one will be created", implies uniqueness.
+          uniqueTasks.set(code, taskData);
+        });
+
+        // 2. Process Unique Tasks
+        let count = 0;
+        for (const taskData of uniqueTasks.values()) {
           const exists = myTasks.find(t => t.code === taskData.code);
           if (exists) {
-            updateTask(exists.id, taskData);
+            await updateTask(exists.id, taskData);
           } else {
-            addTask(taskData);
+            await addTask(taskData);
           }
           count++;
-        });
-        alert(`Importación completada. Procesadas ${count} tareas.`);
+        }
+
+        alert(`Importación completada. Procesadas ${count} tareas únicas.`);
       } catch (error) {
         console.error(error);
         alert('Error al importar CSV');
@@ -295,11 +315,11 @@ export default function Tasks() {
                     <TableRow>
                       <TableCell>
                         <TableSortLabel
-                          active={orderBy === 'code'}
-                          direction={orderBy === 'code' ? order : 'asc'}
-                          onClick={() => handleRequestSort('code')}
+                          active={orderBy === 'hito'}
+                          direction={orderBy === 'hito' ? order : 'asc'}
+                          onClick={() => handleRequestSort('hito')}
                         >
-                          Código
+                          Hito
                         </TableSortLabel>
                       </TableCell>
                       <TableCell>
@@ -311,11 +331,12 @@ export default function Tasks() {
                           Nombre
                         </TableSortLabel>
                       </TableCell>
+
                       <TableCell align="center">UTES</TableCell>
                       <TableCell align="center">UTES Imputadas</TableCell>
                       <TableCell align="center">UTES Pendientes imputar</TableCell>
                       <TableCell align="center">UTES Preimputadas disponibles</TableCell>
-                      <TableCell align="center">UTES Pendiente regularizar</TableCell>
+
                       <TableCell align="center">Estado</TableCell>
                       <TableCell align="right">Acciones</TableCell>
                     </TableRow>
@@ -345,17 +366,17 @@ export default function Tasks() {
                       const preImputedRemaining = preImputedTotal - yaImputadoTotal;
                       const quedan = (task.utes || 0) - gastadas;
 
-                      const pendingTotal = taskImputations.reduce((sum, imp) => {
-                        return imp.type === 'PENDIENTE' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                      }, 0);
-                      const regularizedTotal = taskImputations.reduce((sum, imp) => {
-                        return imp.type === 'REGULARIZADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                      }, 0);
-                      const pendingRegularize = pendingTotal - regularizedTotal;
+
 
                       return (
                         <TableRow key={task.id} hover>
-                          <TableCell component="th" scope="row">{task.code}</TableCell>
+                          <TableCell component="th" scope="row">
+                            <Tooltip title={`Código: ${task.code}`}>
+                              <Typography variant="body2" fontWeight="bold" sx={{ cursor: 'help', display: 'inline-block' }}>
+                                {task.hito || '-'}
+                              </Typography>
+                            </Tooltip>
+                          </TableCell>
                           <TableCell>
                             <Typography variant="body2">{task.name}</Typography>
                           </TableCell>
@@ -385,16 +406,7 @@ export default function Tasks() {
                               </Typography>
                             </Tooltip>
                           </TableCell>
-                          <TableCell align="center">
-                            <Tooltip title="Pendiente regularizar (Pendiente - Regularizado)">
-                              <Typography variant="body2" sx={{
-                                fontWeight: 'bold',
-                                color: pendingRegularize < 0 ? 'error.main' : (pendingRegularize > 0 ? 'warning.main' : 'text.secondary')
-                              }}>
-                                {pendingRegularize !== 0 ? pendingRegularize : '-'}
-                              </Typography>
-                            </Tooltip>
-                          </TableCell>
+
                           <TableCell align="center">
                             <Chip
                               label={task.active ? 'Activa' : 'Inactiva'}
@@ -502,7 +514,7 @@ export default function Tasks() {
                     {/* Always Year */}
                     <FormControl size="small" fullWidth>
                       <InputLabel>Año</InputLabel>
-                      <Select value={summaryYear} label="Año" onChange={e => setSummaryYear(e.target.value)}>
+                      <Select value={summaryYear} label="Año" onChange={e => setSummaryYear(Number(e.target.value))}>
                         {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
                       </Select>
                     </FormControl>
@@ -511,7 +523,7 @@ export default function Tasks() {
                     {(summaryMode === 'MENSUAL' || summaryMode === 'SEMANAL') && (
                       <FormControl size="small" fullWidth>
                         <InputLabel>Mes</InputLabel>
-                        <Select value={summaryMonth} label="Mes" onChange={e => setSummaryMonth(e.target.value)}>
+                        <Select value={summaryMonth} label="Mes" onChange={e => setSummaryMonth(Number(e.target.value))}>
                           {months.map(m => <MenuItem key={m.val} value={m.val}>{m.label}</MenuItem>)}
                         </Select>
                       </FormControl>
@@ -593,6 +605,84 @@ export default function Tasks() {
             </Card>
           </Grid>
         )}
+        {tabIndex === 1 && (
+          <Grid item xs={12} md={6}>
+            <Card variant="outlined" sx={{ height: '100%' }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <Assessment color="primary" />
+                  <Typography variant="h6">Balance Horas Pendientes</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Resumen anual de horas pendientes vs regularizadas.
+                </Typography>
+
+                <Box sx={{ mb: 3 }}>
+                  <FormControl size="small" fullWidth>
+                    <InputLabel>Año</InputLabel>
+                    <Select value={balanceYear} label="Año" onChange={e => setBalanceYear(e.target.value)}>
+                      {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                {(() => {
+                  // Filter imputations for the selected YEAR and TYPES
+                  const yearImputations = imputations.filter(i => i.weekId.startsWith(`${balanceYear}-`));
+
+                  const pending = yearImputations.reduce((sum, i) => {
+                    if (i.type === 'PENDIENTE') {
+                      return sum + Object.values(i.hours).reduce((a, b) => a + (Number(b) || 0), 0);
+                    }
+                    return sum;
+                  }, 0);
+
+                  const recovered = yearImputations.reduce((sum, i) => {
+                    if (i.type === 'REGULARIZADO') {
+                      return sum + Object.values(i.hours).reduce((a, b) => a + (Number(b) || 0), 0);
+                    }
+                    return sum;
+                  }, 0);
+
+                  const deficit = pending - recovered;
+                  const isDeficit = deficit > 0.01; // Tolerance
+
+                  return (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 4 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
+                        <Typography>Horas Pendientes</Typography>
+                        <Typography variant="h6" color="warning.main" fontWeight="bold">{pending.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}h</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
+                        <Typography>Horas Regularizadas</Typography>
+                        <Typography variant="h6" color="success.main" fontWeight="bold">{recovered.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}h</Typography>
+                      </Box>
+                      <Divider />
+                      <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        p: 2,
+                        bgcolor: isDeficit ? '#ffebee' : '#e8f5e9',
+                        borderRadius: 2,
+                        border: 1,
+                        borderColor: isDeficit ? 'error.main' : 'success.main'
+                      }}>
+                        <Typography fontWeight="bold">Déficit (Pte - Reg)</Typography>
+                        <Typography variant="h5" color={isDeficit ? 'error.main' : 'success.main'} fontWeight="bold">
+                          {deficit.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}h
+                        </Typography>
+                      </Box>
+                      {!isDeficit && Math.abs(deficit) < 0.01 && (
+                        <Alert severity="success" variant="outlined">¡Todo en orden! No hay déficit pendiente.</Alert>
+                      )}
+                    </Box>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
       </Grid>
 
       {/* Task Description Dialog */}
@@ -601,6 +691,11 @@ export default function Tasks() {
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             {taskDescription?.code} - {taskDescription?.name}
           </Typography>
+          {taskDescription?.hito && (
+            <Typography variant="subtitle2" color="primary" gutterBottom>
+              Hito: {taskDescription.hito}
+            </Typography>
+          )}
           <Typography variant="body1" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
             {taskDescription?.description || 'Sin descripción disponible.'}
           </Typography>
