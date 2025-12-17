@@ -10,7 +10,7 @@ import { useTheme } from '@mui/material/styles';
 import {
     Box, Typography, Button, Paper, Grid, Card, CardContent, Divider,
     Table, TableBody, TableCell, TableHead, TableRow, Avatar, IconButton,
-    Alert, Chip, Dialog, Tooltip, FormControl, InputLabel, Select, MenuItem, TextField
+    Alert, Chip, Dialog, Tooltip, FormControl, InputLabel, Select, MenuItem, TextField, Checkbox
 } from '@mui/material';
 import {
     Lock, LockOpen, Download, ChevronLeft, ChevronRight, Person, InfoOutlined, Search
@@ -19,7 +19,7 @@ import * as XLSX from 'xlsx';
 
 export default function Approvals() {
     const { user, USERS } = useAuth();
-    const { imputations, isWeekLocked, toggleWeekLock, tasks, taskTypes } = useData();
+    const { imputations, isWeekLocked, toggleWeekLock, tasks, taskTypes, addOrUpdateImputation } = useData();
     const theme = useTheme();
 
     // Selector State
@@ -192,7 +192,8 @@ export default function Approvals() {
                 Jueves: imp.hours.thu,
                 Viernes: imp.hours.fri,
                 Total: Object.values(imp.hours).reduce((a, b) => a + b, 0),
-                Seguimiento: imp.seg ? 'SI' : 'NO'
+                Seguimiento: imp.seg ? 'SI' : 'NO',
+                Aprobado: imp.approved ? 'SI' : 'NO'
             };
         });
 
@@ -200,6 +201,10 @@ export default function Approvals() {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Imputaciones");
         XLSX.writeFile(wb, `Imputaciones_${weekId}.xlsx`);
+    };
+
+    const handleToggleApproved = async (imp, isApproved) => {
+        await addOrUpdateImputation({ ...imp, approved: isApproved });
     };
 
     if (!user.roles.includes('APPROVER')) return <Alert severity="error">Acceso denegado</Alert>;
@@ -369,12 +374,14 @@ export default function Approvals() {
                                                     >
                                                         Tipo {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                                     </TableCell>
+                                                    <TableCell align="center" width="5%">SEG</TableCell>
                                                     <TableCell align="center">L</TableCell>
                                                     <TableCell align="center">M</TableCell>
                                                     <TableCell align="center">X</TableCell>
                                                     <TableCell align="center">J</TableCell>
                                                     <TableCell align="center">V</TableCell>
                                                     <TableCell align="center" sx={{ fontWeight: 'bold' }}>Total</TableCell>
+                                                    <TableCell align="center">OK</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
@@ -382,32 +389,56 @@ export default function Approvals() {
                                                     const total = Object.values(imp.hours).reduce((a, b) => a + b, 0);
                                                     const color = theme.palette.taskTypes[imp.type];
                                                     const typeLabel = taskTypes.find(t => t.id === imp.type)?.label;
+                                                    const isApproved = imp.approved === true;
                                                     return (
-                                                        <TableRow key={imp.id} sx={{ bgcolor: color }}>
+                                                        <TableRow
+                                                            key={imp.id}
+                                                            sx={{
+                                                                bgcolor: color,
+                                                                '& .MuiTypography-root': { color: isApproved ? 'text.disabled' : 'inherit' },
+                                                                '& .MuiTableCell-root': { color: isApproved ? 'text.disabled' : 'inherit' }
+                                                            }}
+                                                        >
                                                             <TableCell
                                                                 sx={{ display: 'flex', alignItems: 'center', gap: 1, borderBottom: 'none' }}
                                                             >
                                                                 <IconButton
                                                                     size="small"
                                                                     onClick={() => setTaskDescription(imp.task)}
-                                                                    color="info"
+                                                                    color={isApproved ? "default" : "info"}
                                                                 >
                                                                     <InfoOutlined fontSize="small" />
                                                                 </IconButton>
                                                                 <Box>
                                                                     <Typography variant="body2" fontWeight="medium">{imp.task?.code}</Typography>
-                                                                    <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', maxWidth: 300 }}>
+                                                                    <Typography variant="caption" color={isApproved ? "text.disabled" : "text.secondary"} noWrap sx={{ display: 'block', maxWidth: 300 }}>
                                                                         {imp.task?.name}
                                                                     </Typography>
                                                                 </Box>
                                                             </TableCell>
                                                             <TableCell sx={{ fontSize: '0.75rem' }}>{typeLabel}</TableCell>
+                                                            <TableCell align="center">
+                                                                <Checkbox
+                                                                    checked={!!imp.seg}
+                                                                    size="small"
+                                                                    disabled
+                                                                    sx={{ p: 0 }}
+                                                                />
+                                                            </TableCell>
                                                             <TableCell align="center">{imp.hours.mon || '-'}</TableCell>
                                                             <TableCell align="center">{imp.hours.tue || '-'}</TableCell>
                                                             <TableCell align="center">{imp.hours.wed || '-'}</TableCell>
                                                             <TableCell align="center">{imp.hours.thu || '-'}</TableCell>
                                                             <TableCell align="center">{imp.hours.fri || '-'}</TableCell>
                                                             <TableCell align="center" sx={{ fontWeight: 'bold' }}>{total}</TableCell>
+                                                            <TableCell align="center">
+                                                                <Checkbox
+                                                                    checked={isApproved}
+                                                                    onChange={(e) => handleToggleApproved(imp, e.target.checked)}
+                                                                    size="small"
+                                                                    color="success"
+                                                                />
+                                                            </TableCell>
                                                         </TableRow>
                                                     )
                                                 })}
