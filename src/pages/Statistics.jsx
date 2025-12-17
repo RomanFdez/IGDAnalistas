@@ -389,7 +389,7 @@ function MonthlyStatsTab() {
         const row6 = months.map(i => getMonthSum(i, ['TRABAJADO', 'JIRA', 'REGULARIZADO', 'RECUPERADO', 'YA_IMPUTADO']));
 
         return { row1, row2, row3, row4, row5, row6 };
-    }, [matrixData]);
+    }, [matrixData, disabledTypes]);
 
     // Calculate Horizontal Totals for Summary Rows (where applicable)
     // For accumulated rows (4 & 5), the "Total" column typically shows the final value or sum? 
