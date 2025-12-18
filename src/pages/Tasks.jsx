@@ -345,7 +345,7 @@ export default function Tasks() {
                     {visibleTasks.length === 0 ? (
                       <TableRow><TableCell colSpan={9} align="center" sx={{ py: 4, color: 'text.secondary' }}>No se encontraron tareas.</TableCell></TableRow>
                     ) : visibleTasks.map(task => {
-                      const taskImputations = imputations.filter(i => i.taskId === task.id && i.userId === user.id);
+                      const taskImputations = imputations.filter(i => i.taskId === task.id);
 
                       // UTES Gastadas (All 'subtracts' types)
                       const gastadas = taskImputations.reduce((sum, imp) => {
@@ -628,7 +628,7 @@ export default function Tasks() {
 
                 {(() => {
                   // Filter imputations for the selected YEAR and TYPES
-                  const yearImputations = imputations.filter(i => i.weekId.startsWith(`${balanceYear}-`));
+                  const yearImputations = imputations.filter(i => i.weekId.startsWith(`${balanceYear}-`) && i.userId === user.id);
 
                   const pending = yearImputations.reduce((sum, i) => {
                     if (i.type === 'PENDIENTE') {
