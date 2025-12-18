@@ -295,7 +295,8 @@ export default function Tasks() {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   InputProps={{ startAdornment: <Search color="action" fontSize="small" sx={{ mr: 1 }} /> }}
-                  sx={{ flexGrow: 1 }}
+                  sx={{ width: 300 }}
+                  autoComplete="off"
                 />
                 <ToggleButtonGroup
                   value={filterStatus}

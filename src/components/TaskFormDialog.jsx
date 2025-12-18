@@ -102,7 +102,7 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} autoComplete="off">
                 <DialogTitle>{taskToEdit ? "Editar Tarea" : "Nueva Tarea"}</DialogTitle>
                 <DialogContent dividers>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, '& .MuiInputLabel-root': { bgcolor: 'background.paper', px: 0.5 } }}>

@@ -648,6 +648,7 @@ export default function Dashboard() {
                                 onChange={e => setSearchQuery(e.target.value)}
                                 InputProps={{ startAdornment: <Search color="action" fontSize="small" sx={{ mr: 1 }} /> }}
                                 sx={{ maxWidth: 300 }}
+                                autoComplete="off"
                             />
                         </Box>
                     )}
