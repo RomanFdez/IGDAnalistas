@@ -734,7 +734,7 @@ export default function Dashboard() {
                                                                 <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#ffcc80' }}>
                                                                     UTES: {(() => {
                                                                         const totalConsumed = imputations
-                                                                            .filter(i => i.taskId === task.id)
+                                                                            .filter(i => i.taskId === task.id && i.userId === user.id)
                                                                             .reduce((acc, curr) => {
                                                                                 const typeInfo = taskTypes.find(t => t.id === curr.type);
                                                                                 if (typeInfo && typeInfo.subtractsFromBudget === false) return acc;
