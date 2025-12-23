@@ -14,6 +14,8 @@ import {
 } from '@mui/icons-material';
 
 import TaskFormDialog from '../components/TaskFormDialog';
+import WeekViewTable from '../components/dashboard/WeekViewTable';
+import MonthViewTable from '../components/dashboard/MonthViewTable';
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -68,9 +70,28 @@ export default function Dashboard() {
 
     const isLocked = isWeekLocked(weekId);
     const myImputations = imputations.filter(i => i.userId === user.id && i.weekId === weekId);
-    const myTasks = getTasksForUser(user.id)
-        .filter(t => t.active)
-        .sort((a, b) => a.code.localeCompare(b.code));
+    const allMyImputations = useMemo(() => imputations.filter(i => i.userId === user.id), [imputations, user.id]);
+
+    // Smart Suggestions: Sort myTasks by usage frequency
+    const taskUsageCount = useMemo(() => {
+        const counts = {};
+        allMyImputations.forEach(imp => {
+            counts[imp.taskId] = (counts[imp.taskId] || 0) + 1;
+        });
+        return counts;
+    }, [allMyImputations]);
+
+    const myTasks = useMemo(() => {
+        const userTasks = getTasksForUser(user.id).filter(t => t.active);
+        return userTasks.sort((a, b) => {
+            // First by usage count (desc)
+            const countA = taskUsageCount[a.id] || 0;
+            const countB = taskUsageCount[b.id] || 0;
+            if (countA !== countB) return countB - countA;
+            // Then alphabetical code
+            return a.code.localeCompare(b.code);
+        });
+    }, [getTasksForUser, user.id, taskUsageCount]);
 
     const [selectedTaskId, setSelectedTaskId] = useState('');
 
@@ -212,31 +233,40 @@ export default function Dashboard() {
             try {
                 const text = e.target.result;
                 const rows = text.split('\n').slice(1);
-                let count = 0;
+                let successCount = 0;
+                let errors = [];
 
-                for (const row of rows) {
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
                     if (!row.trim()) continue;
                     const cols = row.split(';');
-                    if (cols.length < 3) continue;
+                    const rowNum = i + 2; // +2 because skipped header (1) and 0-indexed
+
+                    if (cols.length < 3) {
+                        errors.push(`Fila ${rowNum}: Formato incorrecto, faltan columnas.`);
+                        continue;
+                    }
 
                     const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : '';
-
                     const week = clean(cols[0]);
                     const taskCode = clean(cols[1]);
                     const typeId = clean(cols[2]);
 
-                    if (!week || !taskCode || !typeId) continue;
+                    if (!week || !taskCode || !typeId) {
+                        errors.push(`Fila ${rowNum}: Datos incompletos (Semana, Código o Tipo faltantes).`);
+                        continue;
+                    }
 
                     // 1. Find Task
                     const task = tasks.find(t => t.code === taskCode);
                     if (!task) {
-                        console.warn(`Tarea desconocida: ${taskCode}`);
+                        errors.push(`Fila ${rowNum}: Código de tarea desconocido '${taskCode}'.`);
                         continue;
                     }
 
                     // 2. Validate Lock
                     if (isWeekLocked(week)) {
-                        console.warn(`Semana bloqueada: ${week}`);
+                        errors.push(`Fila ${rowNum}: La semana ${week} está bloqueada.`);
                         continue;
                     }
 
@@ -258,33 +288,40 @@ export default function Dashboard() {
                     };
 
                     // 4. Upsert
-                    // Constraint: Check if already exists to keep ID?
-                    // addOrUpdateImputation handles logic but often requires ID for update.
-                    // If no ID provided, it might create duplicate if backend doesn't check unique(week, user, task, type).
-                    // The DataContext `addOrUpdateImputation` likely checks availability?
-                    // Let's check logic: It's typically: "If ID exists, update. Else create."
-                    // But here we don't have ID.
-                    // We must find existing imputation for this key.
-
-                    const existing = imputations.find(i =>
-                        i.userId === user.id &&
-                        i.weekId === week &&
-                        i.taskId === task.id &&
-                        i.type === typeId
+                    const existing = imputations.find(imp =>
+                        imp.userId === user.id &&
+                        imp.weekId === week &&
+                        imp.taskId === task.id &&
+                        imp.type === typeId
                     );
 
-                    if (existing) {
-                        await addOrUpdateImputation({ ...imputationData, id: existing.id });
-                    } else {
-                        await addOrUpdateImputation(imputationData);
+                    try {
+                        if (existing) {
+                            await addOrUpdateImputation({ ...imputationData, id: existing.id });
+                        } else {
+                            await addOrUpdateImputation(imputationData);
+                        }
+                        successCount++;
+                    } catch (err) {
+                        errors.push(`Fila ${rowNum}: Error al guardar - ${err.message}`);
                     }
-                    count++;
                 }
-                alert(`Importación completada. Se procesaron/actualizaron ${count} registros.`);
-                // Refresh? Context updates should trigger re-render.
+
+                if (errors.length > 0) {
+                    // Generate Error Report
+                    const errorBlob = new Blob([errors.join('\n')], { type: 'text/plain' });
+                    const errorLink = document.createElement('a');
+                    errorLink.href = URL.createObjectURL(errorBlob);
+                    errorLink.download = 'errores_importacion.txt';
+                    errorLink.click();
+                    alert(`Importación parcial: ${successCount} procesados. Se descargará un reporte con ${errors.length} errores.`);
+                } else {
+                    alert(`Importación completada con éxito. ${successCount} registros procesados.`);
+                }
+
             } catch (error) {
                 console.error(error);
-                alert('Error al procesar el archivo CSV.');
+                alert('Error crítico al procesar el archivo CSV.');
             }
             event.target.value = null;
         };
@@ -518,121 +555,14 @@ export default function Dashboard() {
 
             {/* MONTH VIEW TABLE */}
             {viewMode === 'month' && monthDetails && (
-                <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ mb: 3 }}>
-                    <Table size="small" stickyHeader>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell sx={{ bgcolor: 'background.default', minWidth: 200, left: 0, position: 'sticky', zIndex: 2 }}>
-                                    <TableSortLabel
-                                        active={monthOrderBy === 'task'}
-                                        direction={monthOrderBy === 'task' ? monthOrder : 'asc'}
-                                        onClick={() => handleMonthRequestSort('task')}
-                                    >
-                                        Tarea
-                                    </TableSortLabel>
-                                </TableCell>
-                                <TableCell sx={{ bgcolor: 'background.default', minWidth: 100, left: 200, position: 'sticky', zIndex: 2 }}>
-                                    <TableSortLabel
-                                        active={monthOrderBy === 'type'}
-                                        direction={monthOrderBy === 'type' ? monthOrder : 'asc'}
-                                        onClick={() => handleMonthRequestSort('type')}
-                                    >
-                                        Tipo
-                                    </TableSortLabel>
-                                </TableCell>
-                                {monthDetails.days.map(d => (
-                                    <TableCell key={d.toISOString()} align="center" sx={{ bgcolor: 'background.default', minWidth: 40, px: 0.5 }}>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                            <Typography variant="caption" sx={{ textTransform: 'capitalize', color: 'text.secondary' }}>
-                                                {format(d, 'EEE', { locale: es })}
-                                            </Typography>
-                                            <Typography variant="body2" fontWeight="bold">
-                                                {format(d, 'd')}
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                ))}
-                                <TableCell align="center" sx={{ bgcolor: 'background.default', fontWeight: 'bold', minWidth: 60 }}>Total</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {monthDetails.rows.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={3 + monthDetails.days.length} align="center" sx={{ py: 4, color: 'text.secondary' }}>
-                                        No hay imputaciones en este mes.
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                monthDetails.rows.map(row => {
-                                    const task = tasks.find(t => t.id === row.taskId);
-                                    const typeInfo = taskTypes.find(t => t.id === row.type);
-                                    return (
-                                        <TableRow key={`${row.taskId}-${row.type}`} hover>
-                                            <TableCell sx={{ left: 0, position: 'sticky', bgcolor: 'background.paper', zIndex: 1, borderRight: '1px solid #eee' }}>
-                                                <Tooltip title={`${task?.code} - ${task?.name}`}>
-                                                    <Typography variant="body2" noWrap sx={{ maxWidth: 180 }}>
-                                                        {task?.code === 'Estructural' ? 'Estructural' : `${task?.hito || '-'} - ${task?.description || task?.name}`}
-                                                    </Typography>
-                                                </Tooltip>
-                                                {row.status !== 'APPROVED' && row.imputationRef && ( // We need a way to reference the single imputation if aggregating. Wait, month view aggregates by task/type for the row, but `row` is constructed.
-                                                    // Ah, Month view aggregates multiple imputations across days? No, row key is taskId+typeId.
-                                                    // But logic says: "Iterate Mon-Fri of that week" ... "row[key].total += hours".
-                                                    // Wait, `imputations` is a flat list. One imputation per week/task/type.
-                                                    // If a row in Month view represents that single imputation record (which spans a week), we can attach the note to it.
-                                                    // But Month view spans multiple weeks. A row in month view might aggregate data from multiple weekly imputation records if "taskId+typeId" is the key?
-                                                    // No, typically Month view shows rows per Task+Type. If multiple weeks are involved, we have multiple imputation records (one per week).
-                                                    // So we cannot easily attach a single note to a "Month View Row" because it aggregates multiple DB records (weeks).
-                                                    // The user request says "cuando la imputación sea de tipo pendiente". "Imputación" usually refers to the weekly record.
-                                                    // In Week view, it's 1:1. In Month view, it's N:1.
-                                                    // Let's implement it in Week View first as it's the primary "imputation" view.
-                                                    // Should we implement in Month View? If so, which imputation record holds the note? The user might expect the note to be per week.
-                                                    // If I add it to the row, which week's note am I editing?
-                                                    // Let's assume Week View is the target for now, or clarify. But user said "en la pagina de imputaciones" (Dashboard).
-                                                    // I will add it to Week View reliably. For Month view, I'll skip unless user clarifies, as it's ambiguous (aggregates multiple weeks).
-                                                    // Wait, if I assume Month view just lists tasks, and displays days...
-                                                    // Actually, let's stick to Week View where `imp` is clearly defined.
-                                                    null
-                                                )}
-                                            </TableCell>
-                                            <TableCell sx={{ left: 200, position: 'sticky', bgcolor: 'background.paper', zIndex: 1, borderRight: '1px solid #eee' }}>
-                                                <Chip
-                                                    label={typeInfo?.label || row.type}
-                                                    size="small"
-                                                    sx={{
-                                                        bgcolor: typeInfo?.color || '#eee',
-                                                        borderRadius: 1,
-                                                        height: 24,
-                                                        fontSize: '0.75rem'
-                                                    }}
-                                                />
-                                            </TableCell>
-                                            {monthDetails.days.map(d => {
-                                                const val = row.dailyValues[format(d, 'yyyy-MM-dd')];
-                                                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                                                return (
-                                                    <TableCell
-                                                        key={d.toISOString()}
-                                                        align="center"
-                                                        sx={{
-                                                            bgcolor: isWeekend ? '#fafafa' : 'inherit',
-                                                            color: val ? 'text.primary' : 'text.disabled',
-                                                            p: 0.5
-                                                        }}
-                                                    >
-                                                        {val || '-'}
-                                                    </TableCell>
-                                                );
-                                            })}
-                                            <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'grey.50' }}>
-                                                {row.total}
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                <MonthViewTable
+                    monthDetails={monthDetails}
+                    tasks={tasks}
+                    taskTypes={taskTypes}
+                    monthOrderBy={monthOrderBy}
+                    monthOrder={monthOrder}
+                    onRequestSort={handleMonthRequestSort}
+                />
             )}
 
             {/* WEEK VIEW COMPONENTS */}
@@ -654,273 +584,26 @@ export default function Dashboard() {
                     )}
 
                     {/* Main Table */}
-                    <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ overflowX: 'auto' }}>
-                        <Table size="small" sx={{ minWidth: 1000, '& td': { py: 0.5, fontSize: '0.85rem', border: 'none', borderBottom: '1px solid #e0e0e0' }, '& th': { py: 0.5, fontSize: '0.85rem', border: 'none', borderBottom: '1px solid #e0e0e0' } }}>
-                            <TableHead sx={{ bgcolor: 'background.default' }}>
-                                <TableRow>
-                                    <TableCell width="37%" sx={{ bgcolor: 'background.default', left: 0, position: { xs: 'static', md: 'sticky' }, zIndex: 2, borderRight: '1px solid #e0e0e0' }}>
-                                        <TableSortLabel
-                                            active={orderBy === 'task'}
-                                            direction={orderBy === 'task' ? order : 'asc'}
-                                            onClick={() => handleRequestSort('task')}
-                                        >
-                                            Tarea
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell width="12%" sx={{ bgcolor: 'background.default', left: '37%', position: { xs: 'static', md: 'sticky' }, zIndex: 2, borderLeft: '1px solid #e0e0e0' }}>
-                                        <TableSortLabel
-                                            active={orderBy === 'type'}
-                                            direction={orderBy === 'type' ? order : 'asc'}
-                                            onClick={() => handleRequestSort('type')}
-                                        >
-                                            Tipo
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell width="1%" align="center" sx={{ borderRight: '1px solid #e0e0e0' }}>
-                                        <TableSortLabel
-                                            active={orderBy === 'seg'}
-                                            direction={orderBy === 'seg' ? order : 'asc'}
-                                            onClick={() => handleRequestSort('seg')}
-                                        >
-                                            SEG
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    {weekDays.map((d, i) => (
-                                        <TableCell width="8%" key={d.label} align="center" sx={{ textTransform: 'capitalize', borderLeft: i === 0 ? '1px solid #e0e0e0 !important' : 'none !important', borderRight: i === weekDays.length - 1 ? '1px solid #e0e0e0 !important' : 'none !important' }}>
-                                            {d.label.split(' ')[0]}
-                                        </TableCell>
-                                    ))}
-                                    <TableCell width="5%" align="right" sx={{ fontWeight: 'bold', borderLeft: '1px solid #e0e0e0', pr: 1 }}>Total</TableCell>
-                                    <TableCell width="2%" align="left" sx={{ pl: 0 }}></TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {sortedAndFilteredImputations.map(imp => {
-                                    const task = tasks.find(t => t.id === imp.taskId);
-                                    const typeConfig = taskTypes.find(t => t.id === imp.type);
-                                    // Row color always white as per design, type color is only for the chip
-                                    const rowColor = 'background.paper';
-
-                                    return (
-
-                                        <TableRow key={imp.id} sx={{ height: '45px', bgcolor: rowColor, '&:hover': { bgcolor: '#fafafa' }, '& td': { border: 'none', borderBottom: '1px solid #e0e0e0', py: '0 !important' } }}>
-                                            <TableCell sx={{ left: 0, position: { xs: 'static', md: 'sticky' }, bgcolor: 'background.paper', zIndex: 1, maxWidth: '400px', borderRight: '1px solid #e0e0e0' }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    <Box sx={{ display: 'flex', flexShrink: 0 }}>
-                                                        <IconButton
-                                                            onClick={() => setTaskDescription(task)}
-                                                            size="small"
-                                                            color="info"
-                                                            sx={{ p: 0.5 }}
-                                                        >
-                                                            <InfoOutlined fontSize="small" />
-                                                        </IconButton>
-                                                        {imp.status !== 'APPROVED' && (
-                                                            <Tooltip title={imp.note || "Añadir nota"}>
-                                                                <IconButton
-                                                                    size="small"
-                                                                    onClick={() => handleOpenNote(imp)}
-                                                                    color={imp.note ? "primary" : "default"}
-                                                                    sx={{ p: 0.5 }}
-                                                                >
-                                                                    <Comment fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        )}
-                                                    </Box>
-                                                    <Tooltip title={
-                                                        <Box>
-                                                            <Typography variant="body2">{task?.name}</Typography>
-                                                            {task?.utes > 0 && (
-                                                                <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: '#ffcc80' }}>
-                                                                    UTES: {(() => {
-                                                                        const totalConsumed = imputations
-                                                                            .filter(i => i.taskId === task.id)
-                                                                            .reduce((acc, curr) => {
-                                                                                const typeInfo = taskTypes.find(t => t.id === curr.type);
-                                                                                if (typeInfo && typeInfo.subtractsFromBudget === false) return acc;
-                                                                                return acc + Object.values(curr.hours).reduce((a, b) => a + (Number(b) || 0), 0);
-                                                                            }, 0);
-                                                                        const remaining = task.utes - totalConsumed;
-                                                                        return (
-                                                                            <span style={{ color: remaining < 0 ? '#ff5252' : 'inherit', fontWeight: remaining < 0 ? 'bold' : 'normal' }}>
-                                                                                {remaining.toLocaleString('es-ES', { maximumFractionDigits: 1 })} disponibles / {task.utes}
-                                                                            </span>
-                                                                        );
-                                                                    })()}
-                                                                </Typography>
-                                                            )}
-                                                        </Box>
-                                                    }>
-                                                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                                                            <Typography variant="body2" noWrap sx={{ fontWeight: 'medium' }}>
-                                                                {task?.code === 'Estructural' ? 'Estructural' : `${task?.hito || '-'} - ${task?.description || task?.name}`}
-                                                            </Typography>
-                                                            {task?.utes > 0 && (
-                                                                <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                                                                    <Tooltip title="UTES Pendientes de Imputar">
-                                                                        <Typography variant="caption" sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
-                                                                            {(() => {
-                                                                                const taskImputations = imputations.filter(i => i.taskId === task.id);
-                                                                                const preImputedTotal = taskImputations.reduce((sum, imp) => {
-                                                                                    return imp.type === 'PRE_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                                                                                }, 0);
-                                                                                const yaImputadoTotal = taskImputations.reduce((sum, imp) => {
-                                                                                    return imp.type === 'YA_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                                                                                }, 0);
-                                                                                const preRemaining = preImputedTotal - yaImputadoTotal;
-
-                                                                                return (
-                                                                                    <span style={{ color: preRemaining < 0 ? '#d32f2f' : (preRemaining > 0 ? '#2e7d32' : 'inherit'), fontWeight: preRemaining !== 0 ? 'bold' : 'normal' }}>
-                                                                                        {preRemaining.toFixed(1)} Preimputadas
-                                                                                    </span>
-                                                                                );
-                                                                            })()}
-                                                                        </Typography>
-                                                                    </Tooltip>
-
-                                                                    <Tooltip title="UTES Preimputadas Disponibles">
-                                                                        <Typography variant="caption" sx={{ color: 'text.secondary', bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: 0.5 }}>
-                                                                            {(() => {
-                                                                                const taskImputations = imputations.filter(i => i.taskId === task.id);
-                                                                                const preImputedTotal = taskImputations.reduce((sum, imp) => {
-                                                                                    return imp.type === 'PRE_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                                                                                }, 0);
-                                                                                const yaImputadoTotal = taskImputations.reduce((sum, imp) => {
-                                                                                    return imp.type === 'YA_IMPUTADO' ? sum + Object.values(imp.hours).reduce((a, b) => a + (Number(b) || 0), 0) : sum;
-                                                                                }, 0);
-                                                                                const preRemaining = preImputedTotal - yaImputadoTotal;
-
-                                                                                return (
-                                                                                    <span style={{ color: preRemaining < 0 ? '#d32f2f' : (preRemaining > 0 ? '#2e7d32' : 'inherit'), fontWeight: preRemaining !== 0 ? 'bold' : 'normal' }}>
-                                                                                        {preRemaining.toFixed(1)} Preimputadas
-                                                                                    </span>
-                                                                                );
-                                                                            })()}
-                                                                        </Typography>
-                                                                    </Tooltip>
-                                                                </Box>
-                                                            )}
-                                                        </Box>
-                                                    </Tooltip>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell sx={{ left: '37%', position: { xs: 'static', md: 'sticky' }, bgcolor: 'background.paper', zIndex: 1, p: '4px !important', borderLeft: '1px solid #e0e0e0' }}>
-                                                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                                    <FormControl size="small" variant="standard" sx={{ width: '130px' }}>
-                                                        <Select
-                                                            value={imp.type}
-                                                            onChange={(e) => updateField(imp, 'type', e.target.value)}
-                                                            disabled={isLocked}
-                                                            disableUnderline
-                                                            sx={{
-                                                                fontSize: '0.75rem',
-                                                                bgcolor: typeConfig?.color || '#eee',
-                                                                borderRadius: 1,
-                                                                px: 1,
-                                                                py: 0.2, // Compact
-                                                                textAlign: 'center',
-                                                                fontWeight: 'medium',
-                                                                color: 'text.primary',
-                                                                '& .MuiSelect-select': { pr: '24px !important', display: 'flex', justifyContent: 'center' },
-                                                                '& .MuiSvgIcon-root': { display: isLocked ? 'none' : 'block' }
-                                                            }}
-                                                        >
-                                                            {taskTypes.filter(t => {
-                                                                const isStructural = task?.code === 'Estructural';
-                                                                // Dynamic check for structural or not
-                                                                // If t.structural is defined, use it.
-                                                                if (t.structural !== undefined) {
-                                                                    return isStructural ? t.structural : !t.structural;
-                                                                }
-
-                                                                // Fallback to ID check if property not set correctly yet
-                                                                if (isStructural) {
-                                                                    return ['SIN_PROYECTO', 'VACACIONES', 'ENFERMEDAD', 'FESTIVO', 'BAJA', 'OTROS'].includes(t.id);
-                                                                } else {
-                                                                    return ['TRABAJADO', 'JIRA', 'YA_IMPUTADO', 'PRE_IMPUTADO', 'PENDIENTE', 'REGULARIZADO', 'RECUPERADO'].includes(t.id);
-                                                                }
-                                                            }).map(t => <MenuItem key={t.id} value={t.id}>{t.label}</MenuItem>)}
-                                                        </Select>
-                                                    </FormControl>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell align="center" sx={{ borderRight: '1px solid #e0e0e0' }}>
-                                                <Checkbox
-                                                    checked={imp.seg}
-                                                    onChange={(e) => updateField(imp, 'seg', e.target.checked)}
-                                                    disabled={isLocked}
-                                                    size="small"
-                                                />
-                                            </TableCell>
-                                            {weekDays.map((d, i) => {
-                                                const dayKey = dayKeys[i];
-                                                return (
-                                                    <TableCell key={d.label} align="center" sx={{ p: '2px !important', borderLeft: i === 0 ? '1px solid #e0e0e0 !important' : 'none !important', borderRight: i === weekDays.length - 1 ? '1px solid #e0e0e0 !important' : 'none !important' }}>
-                                                        <InputBase
-                                                            value={imp.hours[dayKey] === 0 ? '' : imp.hours[dayKey]}
-                                                            placeholder="-"
-                                                            onChange={(e) => updateHours(imp, dayKey, e.target.value)}
-                                                            disabled={isLocked}
-                                                            inputProps={{
-                                                                min: 0,
-                                                                max: 24,
-                                                                step: 0.5,
-                                                                style: { textAlign: 'center' }
-                                                            }}
-                                                            sx={{
-                                                                width: '40px', // Fixed width
-                                                                height: '32px', // Consistency
-                                                                margin: '0 auto', // Center in cell
-                                                                fontSize: '0.85rem',
-                                                                border: '1px solid #e0e0e0', // Subtle border
-                                                                borderRadius: 1, // Rounded corners
-                                                                bgcolor: isLocked ? 'transparent' : '#fff',
-                                                                '&:hover': {
-                                                                    borderColor: isLocked ? '#e0e0e0' : 'primary.main',
-                                                                },
-                                                                '& input': { textAlign: 'center', cursor: isLocked ? 'default' : 'text', py: 0.5 },
-                                                                '& input::placeholder': { color: '#ccc', opacity: 1 },
-                                                                '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                                                                    '-webkit-appearance': 'none',
-                                                                    margin: 0,
-                                                                },
-                                                                '& input[type=number]': {
-                                                                    '-moz-appearance': 'textfield',
-                                                                },
-                                                            }}
-                                                        />
-                                                    </TableCell>
-                                                );
-                                            })}
-                                            <TableCell align="right" sx={{ fontWeight: 'bold', borderLeft: '1px solid #e0e0e0', pr: 1 }}>
-                                                {Object.values(imp.hours).reduce((a, b) => a + b, 0)}h
-                                            </TableCell>
-                                            <TableCell align="left" sx={{ pl: 0 }}>
-                                                {!isLocked && (
-                                                    <IconButton onClick={() => deleteImputation(imp.id)} size="small" color="error">
-                                                        <DeleteOutline fontSize="small" />
-                                                    </IconButton>
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-
-                                {/* Totals */}
-                                <TableRow sx={{ bgcolor: 'grey.100', borderTop: '2px solid #e0e0e0' }}>
-                                    <TableCell colSpan={3} align="right" sx={{ fontWeight: 'bold' }}>Totales Semanales:</TableCell>
-                                    {dayKeys.map(day => (
-                                        <TableCell key={day} align="center" sx={{ fontWeight: 'bold' }}>{dailyTotals[day]}</TableCell>
-                                    ))}
-                                    <TableCell align="center" sx={{ color: 'primary.main', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                        {grandTotal}h
-                                    </TableCell>
-                                    <TableCell />
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                    <WeekViewTable
+                        imputations={sortedAndFilteredImputations}
+                        allUserImputations={allMyImputations}
+                        currentWeekStart={currentWeekStart}
+                        tasks={tasks}
+                        taskTypes={taskTypes}
+                        weekDays={weekDays}
+                        dayKeys={dayKeys}
+                        isLocked={isLocked}
+                        orderBy={orderBy}
+                        order={order}
+                        onRequestSort={handleRequestSort}
+                        onUpdateHours={updateHours}
+                        onUpdateField={updateField}
+                        onDelete={deleteImputation}
+                        onOpenNote={handleOpenNote}
+                        setTaskDescription={setTaskDescription}
+                        dailyTotals={dailyTotals}
+                        grandTotal={grandTotal}
+                    />
                 </>
             )}
             {/* Task Description Dialog */}
