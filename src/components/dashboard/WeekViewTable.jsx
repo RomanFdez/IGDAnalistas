@@ -1,17 +1,13 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel,
     Paper, Box, Typography, IconButton, Tooltip, FormControl, Select, MenuItem, Checkbox,
     InputBase
 } from '@mui/material';
 import { DeleteOutline, InfoOutlined, Comment } from '@mui/icons-material';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
-import { subWeeks, getISOWeek, getISOWeekYear } from 'date-fns';
 
 export default function WeekViewTable({
     imputations,
-    allUserImputations,
-    currentWeekStart,
     tasks,
     taskTypes,
     weekDays,
@@ -136,11 +132,6 @@ export default function WeekViewTable({
                                                     {task?.code === 'Estructural' ? 'Estructural' : `${task?.hito || '-'} - ${task?.description || task?.name}`}
                                                 </Typography>
                                             </Tooltip>
-                                            <SparklineWrapper
-                                                taskId={imp.taskId}
-                                                allUserImputations={allUserImputations}
-                                                currentWeekStart={currentWeekStart}
-                                            />
                                         </Box>
                                     </Box>
                                 </TableCell>
@@ -250,35 +241,5 @@ export default function WeekViewTable({
                 </TableBody>
             </Table>
         </TableContainer>
-    );
-}
-
-function SparklineWrapper({ taskId, allUserImputations, currentWeekStart }) {
-    const data = useMemo(() => {
-        if (!allUserImputations || !currentWeekStart) return [];
-        const d = [];
-        for (let i = 4; i >= 1; i--) {
-            const pastDate = subWeeks(currentWeekStart, i);
-            const weekId = `${getISOWeekYear(pastDate)}-W${getISOWeek(pastDate)}`;
-
-            const total = allUserImputations
-                .filter(imp => imp.weekId === weekId && imp.taskId === taskId)
-                .reduce((acc, curr) => acc + Object.values(curr.hours).reduce((a, b) => a + b, 0), 0);
-
-            d.push({ name: `W-${i}`, value: total });
-        }
-        return d;
-    }, [taskId, allUserImputations, currentWeekStart]);
-
-    if (data.every(item => item.value === 0)) return null;
-
-    return (
-        <Box sx={{ height: 20, width: 60, mt: 0.5 }}>
-            <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data}>
-                    <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} dot={false} />
-                </LineChart>
-            </ResponsiveContainer>
-        </Box>
     );
 }

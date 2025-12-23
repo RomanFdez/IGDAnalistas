@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Database Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://igdapp:Castellae1259@192.168.1.63/igdanalistas?authSource=admin';
@@ -207,6 +207,50 @@ app.post('/api/locks', async (req, res) => {
         );
         res.json(updated);
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 7. Backup & Restore
+app.get('/api/backup', async (req, res) => {
+    try {
+        const [users, tasks, taskTypes, imputations, weekLocks] = await Promise.all([
+            User.find({}),
+            Task.find({}),
+            TaskType.find({}),
+            Imputation.find({}),
+            WeekLock.find({})
+        ]);
+        res.json({ users, tasks, taskTypes, imputations, weekLocks });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/restore', async (req, res) => {
+    try {
+        const { users, tasks, taskTypes, imputations, weekLocks } = req.body;
+
+        // Transaction-like: Delete all then Insert all
+        // Note: In a production replica set, use a transaction session. Here assuming standalone for dev.
+
+        await Promise.all([
+            User.deleteMany({}),
+            Task.deleteMany({}),
+            TaskType.deleteMany({}),
+            Imputation.deleteMany({}),
+            WeekLock.deleteMany({})
+        ]);
+
+        if (users?.length) await User.insertMany(users);
+        if (tasks?.length) await Task.insertMany(tasks);
+        if (taskTypes?.length) await TaskType.insertMany(taskTypes);
+        if (imputations?.length) await Imputation.insertMany(imputations);
+        if (weekLocks?.length) await WeekLock.insertMany(weekLocks);
+
+        res.json({ message: 'Restauración completada con éxito' });
+    } catch (err) {
+        console.error('Restore Error:', err);
         res.status(500).json({ error: err.message });
     }
 });

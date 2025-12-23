@@ -6,9 +6,91 @@ import {
     Box, Typography, Paper, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, Checkbox, IconButton, Switch,
     Tabs, Tab, Grid, TextField, Button, Divider, Chip, FormControlLabel, Tooltip,
-    Dialog, DialogTitle, DialogContent, DialogActions
+    Dialog, DialogTitle, DialogContent, DialogActions, Alert
 } from '@mui/material';
-import { Save, PersonAdd, School, VpnKey, DeleteOutline, Add, FileDownload, FileUpload } from '@mui/icons-material';
+import { Save, PersonAdd, School, VpnKey, DeleteOutline, Add, FileDownload, FileUpload, SettingsBackupRestore } from '@mui/icons-material';
+
+function BackupTab() {
+    const handleDownloadBackup = async () => {
+        try {
+            const res = await fetch('/api/backup');
+            if (!res.ok) throw new Error('Error al descargar backup');
+            const data = await res.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    const handleRestoreBackup = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!window.confirm('⚠️ ADVERTENCIA: Esta acción BORRARÁ todos los datos actuales y los reemplazará con los del archivo. ¿Estás seguro?')) {
+            e.target.value = null;
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            try {
+                const json = JSON.parse(ev.target.result);
+                const res = await fetch('/api/restore', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(json)
+                });
+                if (!res.ok) throw new Error('Error al restaurar');
+                alert('Restauración completada. Se recargará la página.');
+                window.location.reload();
+            } catch (err) {
+                console.error(err);
+                alert('Error al restaurar: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    return (
+        <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+            <Typography variant="h6" gutterBottom display="flex" justifyContent="center" alignItems="center" gap={1}>
+                <SettingsBackupRestore /> Copia de Seguridad y Restauración
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: 'auto' }}>
+                Descarga una copia completa de la base de datos en formato JSON o restaura una copia previa.
+                <br />
+                <strong>Nota:</strong> Al restaurar un backup se eliminarán todos los datos actuales y se reemplazarán por los del fichero.
+            </Typography>
+
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
+                <Button
+                    variant="outlined"
+                    startIcon={<FileDownload />}
+                    onClick={handleDownloadBackup}
+                    size="large"
+                >
+                    Descargar Backup
+                </Button>
+
+                <Button
+                    variant="contained"
+                    component="label"
+                    startIcon={<FileUpload />}
+                    color="error"
+                    size="large"
+                >
+                    Restaurar Backup
+                    <input type="file" hidden accept=".json" onChange={handleRestoreBackup} />
+                </Button>
+            </Box>
+        </Paper>
+    );
+}
 
 function TaskTypesTab() {
     const { taskTypes, updateTaskType, deleteTaskType } = useData();
@@ -529,10 +611,10 @@ export default function Admin() {
                 {tabIndex === 0 && (
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">
-                            Exportar
+                            Exportar Tipos
                         </Button>
                         <Button startIcon={<FileUpload />} component="label" color="inherit">
-                            Importar
+                            Importar Tipos
                             <input type="file" hidden accept=".csv" onChange={handleImport} />
                         </Button>
                         <Button variant="contained" startIcon={<Add />} onClick={() => setOpenAdd(true)}>
@@ -546,11 +628,13 @@ export default function Admin() {
                 <Tabs value={tabIndex} onChange={handleTabChange}>
                     <Tab label="Tipos de Tarea" />
                     <Tab label="Usuarios" />
+                    <Tab label="Backup" />
                 </Tabs>
             </Box>
 
             {tabIndex === 0 && <TaskTypesTab />}
             {tabIndex === 1 && <UsersTab />}
+            {tabIndex === 2 && <BackupTab />}
 
             {/* Dialog for Add Type */}
             <Dialog open={openAdd} onClose={() => setOpenAdd(false)}>

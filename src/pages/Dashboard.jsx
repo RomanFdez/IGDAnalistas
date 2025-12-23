@@ -84,7 +84,10 @@ export default function Dashboard() {
     const myTasks = useMemo(() => {
         const userTasks = getTasksForUser(user.id).filter(t => t.active);
         return userTasks.sort((a, b) => {
-            // First by usage count (desc)
+            // Priority: Estructural
+            if (a.code === 'Estructural') return -1;
+            if (b.code === 'Estructural') return 1;
+            // Then by usage count (desc)
             const countA = taskUsageCount[a.id] || 0;
             const countB = taskUsageCount[b.id] || 0;
             if (countA !== countB) return countB - countA;
