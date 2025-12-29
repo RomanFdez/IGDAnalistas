@@ -1,0 +1,1280 @@
+{
+  "users": [
+    {
+      "_id": "6941943137a94bb2c107e320",
+      "id": "admin-user",
+      "name": "Admin",
+      "password": "admin",
+      "roles": [
+        "APPROVER"
+      ],
+      "active": true,
+      "__v": 0
+    },
+    {
+      "_id": "6941955337a94bb2c107e352",
+      "id": "u-1765905747499-498",
+      "name": "Álvaro Román ",
+      "password": "1234",
+      "roles": [
+        "ANALYST",
+        "APPROVER"
+      ],
+      "active": true,
+      "__v": 0
+    },
+    {
+      "_id": "69419fa337a94bb2c107e3c4",
+      "id": "60b1a620-d356-467e-bcde-ae1a2b1c5a1e",
+      "name": "Mónica Tapiero",
+      "password": "Malditos2025",
+      "roles": [
+        "ANALYST",
+        "APPROVER"
+      ],
+      "active": true,
+      "__v": 0
+    },
+    {
+      "_id": "694258c437a94bb2c107e3de",
+      "id": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "name": "Irene García",
+      "password": "Malditos2025",
+      "roles": [
+        "ANALYST",
+        "APPROVER"
+      ],
+      "active": true,
+      "__v": 0
+    },
+    {
+      "_id": "694258e537a94bb2c107e3e0",
+      "id": "40cca2a6-0879-4ee5-b2d7-74a582871a1c",
+      "name": "José Miguel Teruel",
+      "password": "Malditos2025",
+      "roles": [
+        "ANALYST",
+        "APPROVER"
+      ],
+      "active": true,
+      "__v": 0
+    },
+    {
+      "_id": "6942590337a94bb2c107e3e2",
+      "id": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "name": "Vicente Fuente",
+      "password": "Malditos2025",
+      "roles": [
+        "ANALYST",
+        "APPROVER"
+      ],
+      "active": true,
+      "__v": 0
+    }
+  ],
+  "tasks": [
+    {
+      "_id": "6941943137a94bb2c107e317",
+      "id": "estructural-global",
+      "code": "Estructural",
+      "name": "No Imputable",
+      "description": "Tarea estructural para imputaciones generales.",
+      "permanent": true,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [],
+      "isGlobal": true,
+      "utes": 0,
+      "__v": 0
+    },
+    {
+      "_id": "6942a40f6f3cb2e38d49cf07",
+      "id": "e337e4d1-622e-4ebf-ba77-29d2628f7a77",
+      "code": "HT9886-1",
+      "name": "Salud QR",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "u-1765905747499-498"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT9886",
+      "__v": 0
+    },
+    {
+      "_id": "6942a40f6f3cb2e38d49cf09",
+      "id": "4421b8cd-96e3-4a4a-9b8c-3468ebeeb77b",
+      "code": "HT9518-1",
+      "name": "H_Plan GESCOM_Animales Compañía_Analisis modelo documental GDOS",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "u-1765905747499-498"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT9518",
+      "__v": 0
+    },
+    {
+      "_id": "6942a40f6f3cb2e38d49cf0b",
+      "id": "e37a6247-45f0-4755-9e53-76ef1d99fde2",
+      "code": "HT22257-1",
+      "name": "H_Plan GESCOM_Soporte Modelo y WPD_A",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "u-1765905747499-498"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT22257",
+      "__v": 0
+    },
+    {
+      "_id": "6942a40f6f3cb2e38d49cf0d",
+      "id": "cbcc39c5-88a4-480c-a80e-ab23e6a1faa4",
+      "code": "HT19761-1",
+      "name": "PRES_GDO_Analista_2025__Intercambio y carga de documentos_INV00004079",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "u-1765905747499-498"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT19761",
+      "__v": 0
+    },
+    {
+      "_id": "6942a40f6f3cb2e38d49cf0f",
+      "id": "8079669e-05fb-472d-9609-bc01610dcd09",
+      "code": "HT9518-2",
+      "name": "H_Plan GESCOM_Animales Compañía_Analisis Plantillas ExStream",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "u-1765905747499-498"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT9518",
+      "__v": 0
+    },
+    {
+      "_id": "6942a4496f3cb2e38d49cf47",
+      "id": "4239f470-9c81-439d-b2a7-e7df48dbe3e1",
+      "code": "HT7502-1",
+      "name": "PRES_Portal Financiero Mapfre",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "12943e4a-7a92-4e11-9065-fc62a1debc5d"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT7502",
+      "__v": 0
+    },
+    {
+      "_id": "6942a4496f3cb2e38d49cf49",
+      "id": "b7b26efc-41aa-485e-9cc8-0b73f9499b76",
+      "code": "HT21922-1",
+      "name": "ES_HP_PRES_GDO_Analista_Consulta y Almacenamiento Integral a la documentaci�n de Mapfre (NSEi)",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "12943e4a-7a92-4e11-9065-fc62a1debc5d"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT21922",
+      "__v": 0
+    },
+    {
+      "_id": "6942a4496f3cb2e38d49cf4b",
+      "id": "90e994ba-1953-4fcd-b8fd-2a0f3fe8af71",
+      "code": "HT22166-1",
+      "name": "20251006-02 - WPD-[EBRO] Acuerdos financiados: 51025 - EBRO FINAN ANUAL y 51027 - EBRO FINAN PLURI",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "12943e4a-7a92-4e11-9065-fc62a1debc5d"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT22166",
+      "__v": 0
+    },
+    {
+      "_id": "6942a4756f3cb2e38d49cf84",
+      "id": "a1ae4814-dbfd-4b19-96e3-4a393c45bc3a",
+      "code": "HT22257-1",
+      "name": "H_Plan GESCOM_Caza y Pesca_An�lisis GD_Plantillas_Modelo",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "6562aac7-5a25-442f-99c0-86cb1995bafc"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT22257",
+      "__v": 0
+    },
+    {
+      "_id": "6942a4756f3cb2e38d49cf86",
+      "id": "19f884a8-5c9c-4434-8040-363622ad8a2f",
+      "code": "HT9293-1",
+      "name": "Proceso Quejas y reclamaciones (ROMANFE)",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "6562aac7-5a25-442f-99c0-86cb1995bafc"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT9293",
+      "__v": 0
+    },
+    {
+      "_id": "6942a4756f3cb2e38d49cf88",
+      "id": "f329a7f3-3a2d-4e78-98b3-10c5d1c0880f",
+      "code": "HT16634-1",
+      "name": "DLGD: Desarrollo API GD nuevo procesos y soporte",
+      "description": "",
+      "permanent": false,
+      "active": true,
+      "targetRoles": [],
+      "assignedUserIds": [
+        "6562aac7-5a25-442f-99c0-86cb1995bafc"
+      ],
+      "isGlobal": false,
+      "utes": 0,
+      "hito": "HT16634",
+      "__v": 0
+    }
+  ],
+  "taskTypes": [
+    {
+      "_id": "6941952837a94bb2c107e337",
+      "id": "TRABAJADO",
+      "label": "Trabajado",
+      "color": "#E8F5E9",
+      "structural": false,
+      "computesInWeek": true,
+      "subtractsFromBudget": true,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e339",
+      "id": "JIRA",
+      "label": "Jira",
+      "color": "#A5D6A7",
+      "structural": false,
+      "computesInWeek": true,
+      "subtractsFromBudget": true,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e33b",
+      "id": "YA_IMPUTADO",
+      "label": "Ya imputado",
+      "color": "#E3F2FD",
+      "structural": false,
+      "computesInWeek": true,
+      "subtractsFromBudget": false,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e33d",
+      "id": "PRE_IMPUTADO",
+      "label": "Pre-imputado",
+      "color": "#90CAF9",
+      "structural": false,
+      "computesInWeek": false,
+      "subtractsFromBudget": true,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e33f",
+      "id": "SIN_PROYECTO",
+      "label": "Sin proyecto",
+      "color": "#F5F5F5",
+      "structural": true,
+      "computesInWeek": true,
+      "subtractsFromBudget": false,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e341",
+      "id": "PENDIENTE",
+      "label": "Pendiente",
+      "color": "#f4a4c0",
+      "structural": true,
+      "computesInWeek": true,
+      "subtractsFromBudget": false,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e343",
+      "id": "RECUPERADO",
+      "label": "Recuperado",
+      "color": "#d357fe",
+      "structural": false,
+      "computesInWeek": false,
+      "subtractsFromBudget": true,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e345",
+      "id": "REGULARIZADO",
+      "label": "Regularizado",
+      "color": "#ffdad8",
+      "structural": false,
+      "computesInWeek": false,
+      "subtractsFromBudget": true,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e347",
+      "id": "VACACIONES",
+      "label": "Vacaciones",
+      "color": "#ECEFF1",
+      "structural": true,
+      "computesInWeek": true,
+      "subtractsFromBudget": false,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e349",
+      "id": "ENFERMEDAD",
+      "label": "Enfermedad",
+      "color": "#CFD8DC",
+      "structural": true,
+      "computesInWeek": true,
+      "subtractsFromBudget": false,
+      "__v": 0
+    },
+    {
+      "_id": "6941952837a94bb2c107e34b",
+      "id": "FESTIVO",
+      "label": "Festivo",
+      "color": "#B0BEC5",
+      "structural": true,
+      "computesInWeek": true,
+      "subtractsFromBudget": false,
+      "__v": 0
+    }
+  ],
+  "imputations": [
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 8,
+        "wed": 8,
+        "thu": 8,
+        "fri": 8,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf17",
+      "id": "9a7d064c-da79-41fb-b335-23b952c9b745",
+      "weekId": "2025-W51",
+      "taskId": "cbcc39c5-88a4-480c-a80e-ab23e6a1faa4",
+      "userId": "u-1765905747499-498",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 2,
+        "thu": 0,
+        "fri": 4,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf1a",
+      "id": "d48f529f-cef4-4279-bda3-be9833c17242",
+      "weekId": "2025-W50",
+      "taskId": "cbcc39c5-88a4-480c-a80e-ab23e6a1faa4",
+      "userId": "u-1765905747499-498",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 8,
+        "fri": 4,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf1d",
+      "id": "f09b9810-1bd1-49a3-aee8-b842a1968adc",
+      "weekId": "2025-W50",
+      "taskId": "e337e4d1-622e-4ebf-ba77-29d2628f7a77",
+      "userId": "u-1765905747499-498",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 13,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf20",
+      "id": "9fcdc111-38db-46f0-9147-462053edd2fb",
+      "weekId": "2025-W50",
+      "taskId": "e337e4d1-622e-4ebf-ba77-29d2628f7a77",
+      "userId": "u-1765905747499-498",
+      "type": "PRE_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 8,
+        "wed": 6,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf23",
+      "id": "ac21ffa3-a616-4d59-9a78-a778573b4542",
+      "weekId": "2025-W50",
+      "taskId": "4421b8cd-96e3-4a4a-9b8c-3468ebeeb77b",
+      "userId": "u-1765905747499-498",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 20,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf26",
+      "id": "8da62b2c-9a79-4c59-8484-14113416eab3",
+      "weekId": "2025-W50",
+      "taskId": "e37a6247-45f0-4755-9e53-76ef1d99fde2",
+      "userId": "u-1765905747499-498",
+      "type": "PRE_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 41,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf29",
+      "id": "29f32fe0-1945-4f37-83e1-cbbd4a712450",
+      "weekId": "2025-W50",
+      "taskId": "cbcc39c5-88a4-480c-a80e-ab23e6a1faa4",
+      "userId": "u-1765905747499-498",
+      "type": "PRE_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 41,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf2c",
+      "id": "88371a2d-916d-4961-b130-7e18acd4f372",
+      "weekId": "2025-W50",
+      "taskId": "cbcc39c5-88a4-480c-a80e-ab23e6a1faa4",
+      "userId": "u-1765905747499-498",
+      "type": "RECUPERADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 8,
+        "wed": 8,
+        "thu": 8,
+        "fri": 8,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf2f",
+      "id": "afb507e8-1e52-4c4f-8120-db57e51e8997",
+      "weekId": "2025-W49",
+      "taskId": "cbcc39c5-88a4-480c-a80e-ab23e6a1faa4",
+      "userId": "u-1765905747499-498",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf32",
+      "id": "805ca8d7-fc86-4a3c-ba7d-97e53d7fcf4b",
+      "weekId": "2025-W50",
+      "taskId": "estructural-global",
+      "userId": "u-1765905747499-498",
+      "type": "FESTIVO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 8,
+        "wed": 0,
+        "thu": 0,
+        "fri": 6,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf35",
+      "id": "a87c1c9d-2c06-44e2-9c3e-1e37b761a96a",
+      "weekId": "2025-W52",
+      "taskId": "4421b8cd-96e3-4a4a-9b8c-3468ebeeb77b",
+      "userId": "u-1765905747499-498",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 8,
+        "thu": 8,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf38",
+      "id": "63062e6a-8748-4899-abff-4f78314e8472",
+      "weekId": "2025-W52",
+      "taskId": "estructural-global",
+      "userId": "u-1765905747499-498",
+      "type": "FESTIVO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf3b",
+      "id": "29f5f28d-29b0-4ffd-abb2-f28d5dc64d1c",
+      "weekId": "2025-W52",
+      "taskId": "cbcc39c5-88a4-480c-a80e-ab23e6a1faa4",
+      "userId": "u-1765905747499-498",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 2,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4196f3cb2e38d49cf3e",
+      "id": "96f8534c-2077-4a4f-a6e8-f83057373bd6",
+      "weekId": "2025-W52",
+      "taskId": "8079669e-05fb-472d-9609-bc01610dcd09",
+      "userId": "u-1765905747499-498",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 8,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a41a6f3cb2e38d49cf41",
+      "id": "d92f1c99-4e33-4137-9569-74295a4e2257",
+      "weekId": "2026-W1",
+      "taskId": "4421b8cd-96e3-4a4a-9b8c-3468ebeeb77b",
+      "userId": "u-1765905747499-498",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 4,
+        "wed": 3,
+        "thu": 3,
+        "fri": 4,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4616f3cb2e38d49cf4e",
+      "id": "5aa970ca-ec9c-4d4a-8d91-237cad8bd210",
+      "weekId": "2025-W49",
+      "taskId": "estructural-global",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "PENDIENTE",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 1,
+        "thu": 1,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4616f3cb2e38d49cf51",
+      "id": "f94af018-3cd4-49df-adbd-41f6ce0244a6",
+      "weekId": "2025-W49",
+      "taskId": "4239f470-9c81-439d-b2a7-e7df48dbe3e1",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 1,
+        "thu": 1,
+        "fri": 2,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4616f3cb2e38d49cf54",
+      "id": "e0d93d1c-a44b-489b-91d7-484ef2366c6d",
+      "weekId": "2025-W49",
+      "taskId": "b7b26efc-41aa-485e-9cc8-0b73f9499b76",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 4,
+        "wed": 3,
+        "thu": 3,
+        "fri": 4,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4616f3cb2e38d49cf57",
+      "id": "df18768e-f135-4810-8429-117c6bd166e5",
+      "weekId": "2025-W49",
+      "taskId": "90e994ba-1953-4fcd-b8fd-2a0f3fe8af71",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4616f3cb2e38d49cf5a",
+      "id": "f0cc5069-5b42-4e19-8c23-a22484711929",
+      "weekId": "2025-W49",
+      "taskId": "estructural-global",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "ENFERMEDAD",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 4,
+        "thu": 4,
+        "fri": 4,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4616f3cb2e38d49cf5d",
+      "id": "718fa324-84d2-4064-a735-054b06a3cc62",
+      "weekId": "2025-W50",
+      "taskId": "estructural-global",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "PENDIENTE",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4616f3cb2e38d49cf60",
+      "id": "ad41d2f9-0a4d-4535-9670-edf7a0d3d921",
+      "weekId": "2025-W50",
+      "taskId": "estructural-global",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "FESTIVO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 8,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4616f3cb2e38d49cf63",
+      "id": "f82f6784-c45d-4704-a7a0-be45f142ec34",
+      "weekId": "2025-W50",
+      "taskId": "estructural-global",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "VACACIONES",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 3,
+        "thu": 3,
+        "fri": 3,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4616f3cb2e38d49cf66",
+      "id": "098d609e-29d6-4bd0-87e2-59a66afabe66",
+      "weekId": "2025-W50",
+      "taskId": "b7b26efc-41aa-485e-9cc8-0b73f9499b76",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 18,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4626f3cb2e38d49cf69",
+      "id": "d91099fe-d5a3-4e8c-bcab-98e5cb110ca2",
+      "weekId": "2025-W50",
+      "taskId": "b7b26efc-41aa-485e-9cc8-0b73f9499b76",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "PRE_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 1,
+        "thu": 1,
+        "fri": 1,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4626f3cb2e38d49cf6c",
+      "id": "2d900a64-ef07-4228-ab3c-5cfb23b41089",
+      "weekId": "2025-W50",
+      "taskId": "90e994ba-1953-4fcd-b8fd-2a0f3fe8af71",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 1,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4626f3cb2e38d49cf6f",
+      "id": "bf64d688-d3ec-4905-b22f-d4a92538d2cf",
+      "weekId": "2025-W50",
+      "taskId": "b7b26efc-41aa-485e-9cc8-0b73f9499b76",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "RECUPERADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 3,
+        "tue": 3,
+        "wed": 4,
+        "thu": 4,
+        "fri": 4,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4626f3cb2e38d49cf72",
+      "id": "4191e428-65b7-4b4d-958a-8c8e8b69ed7a",
+      "weekId": "2025-W51",
+      "taskId": "b7b26efc-41aa-485e-9cc8-0b73f9499b76",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 1,
+        "tue": 1,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4626f3cb2e38d49cf75",
+      "id": "74932304-2238-4de0-b489-98b3dadfb17b",
+      "weekId": "2025-W51",
+      "taskId": "4239f470-9c81-439d-b2a7-e7df48dbe3e1",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "YA_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 4,
+        "tue": 4,
+        "wed": 4,
+        "thu": 4,
+        "fri": 4,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4626f3cb2e38d49cf78",
+      "id": "f74ad384-bae9-42cf-83a8-1565503bb182",
+      "weekId": "2025-W51",
+      "taskId": "estructural-global",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "PENDIENTE",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 8,
+        "wed": 0,
+        "thu": 0,
+        "fri": 8,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4626f3cb2e38d49cf7b",
+      "id": "6d2d3e0f-5bec-4877-ae4e-076642e8c897",
+      "weekId": "2025-W52",
+      "taskId": "estructural-global",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "VACACIONES",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 8,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4626f3cb2e38d49cf7e",
+      "id": "b50619c1-9dff-4cb2-85b8-f0b68b94a565",
+      "weekId": "2026-W1",
+      "taskId": "estructural-global",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "VACACIONES",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 8,
+        "thu": 8,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4626f3cb2e38d49cf81",
+      "id": "45eb53d5-75ca-4f87-a3ae-7f05fecd08ba",
+      "weekId": "2025-W52",
+      "taskId": "estructural-global",
+      "userId": "12943e4a-7a92-4e11-9065-fc62a1debc5d",
+      "type": "FESTIVO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 8,
+        "wed": 4,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a47f6f3cb2e38d49cf8b",
+      "id": "d8d67374-fbd7-4b7c-b813-2de400382d81",
+      "weekId": "2025-W49",
+      "taskId": "estructural-global",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "PENDIENTE",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 4,
+        "thu": 8,
+        "fri": 6,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a47f6f3cb2e38d49cf8e",
+      "id": "70dfc233-b488-46c2-b24a-d04be5bb1a95",
+      "weekId": "2025-W49",
+      "taskId": "e37a6247-45f0-4755-9e53-76ef1d99fde2",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 2,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a47f6f3cb2e38d49cf91",
+      "id": "939945f7-090a-4a58-8625-cc3b65da50a9",
+      "weekId": "2025-W49",
+      "taskId": "19f884a8-5c9c-4434-8040-363622ad8a2f",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 6,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a47f6f3cb2e38d49cf94",
+      "id": "02b1de2f-4786-484a-b5fd-d0a01bab3442",
+      "weekId": "2025-W50",
+      "taskId": "19f884a8-5c9c-4434-8040-363622ad8a2f",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 2,
+        "wed": 8,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a47f6f3cb2e38d49cf97",
+      "id": "ab203e43-092a-487e-9a35-de643f476c87",
+      "weekId": "2025-W50",
+      "taskId": "estructural-global",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "PENDIENTE",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 8,
+        "fri": 8,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a47f6f3cb2e38d49cf9a",
+      "id": "9596c7ad-7f27-4b5d-8777-f76d6f3594aa",
+      "weekId": "2025-W50",
+      "taskId": "estructural-global",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "PENDIENTE",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 8,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4806f3cb2e38d49cf9d",
+      "id": "a8434a59-30af-4415-a532-3aed52dc2d77",
+      "weekId": "2025-W50",
+      "taskId": "estructural-global",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "FESTIVO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 38,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4806f3cb2e38d49cfa0",
+      "id": "74948bfd-80eb-41fb-a9be-bc082c20bbb5",
+      "weekId": "2025-W50",
+      "taskId": "f329a7f3-3a2d-4e78-98b3-10c5d1c0880f",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "PRE_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 20,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4806f3cb2e38d49cfa3",
+      "id": "b4a7857e-e6b5-462d-bd75-507a98e508e2",
+      "weekId": "2025-W50",
+      "taskId": "e37a6247-45f0-4755-9e53-76ef1d99fde2",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "PRE_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 60,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6942a4806f3cb2e38d49cfa6",
+      "id": "180f8b81-0b30-4b09-bed1-e9d49acf47ec",
+      "weekId": "2025-W51",
+      "taskId": "e37a6247-45f0-4755-9e53-76ef1d99fde2",
+      "userId": "6562aac7-5a25-442f-99c0-86cb1995bafc",
+      "type": "PRE_IMPUTADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    },
+    {
+      "hours": {
+        "mon": 0,
+        "tue": 0,
+        "wed": 0,
+        "thu": 0,
+        "fri": 0,
+        "sat": 0,
+        "sun": 0
+      },
+      "_id": "6947fe39c147c1ae3ed8f3e1",
+      "id": "2b7b5f86-a771-4823-a66f-0be72c24d8a5",
+      "weekId": "2025-W52",
+      "taskId": "cbcc39c5-88a4-480c-a80e-ab23e6a1faa4",
+      "userId": "u-1765905747499-498",
+      "type": "TRABAJADO",
+      "seg": false,
+      "status": "DRAFT",
+      "__v": 0
+    }
+  ],
+  "weekLocks": [
+    {
+      "_id": "6943fa8b07be8754ea94cbe6",
+      "weekId": "2025-W51",
+      "__v": 0,
+      "isLocked": true
+    }
+  ]
+}

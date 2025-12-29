@@ -67,8 +67,7 @@ export default function Layout({ children }) {
                             sx={{
                                 borderRadius: 2,
                                 '&.Mui-selected': {
-                                    bgcolor: 'primary.light',
-                                    color: 'primary.dark', // Text color needs to be darker? Or primary.contrastText if solid?
+                                    color: 'primary.dark',
                                     // using default selection style usually works, but let's customize
                                     bgcolor: 'rgba(25, 118, 210, 0.08)',
                                     ':hover': { bgcolor: 'rgba(25, 118, 210, 0.12)' }

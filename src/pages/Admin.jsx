@@ -10,20 +10,74 @@ import {
 } from '@mui/material';
 import { Save, PersonAdd, School, VpnKey, DeleteOutline, Add, FileDownload, FileUpload, SettingsBackupRestore } from '@mui/icons-material';
 
+import ConfirmDialog from '../components/ConfirmDialog';
+
 function BackupTab() {
-    const handleDownloadBackup = async () => {
+    const { users: USERS = [] } = useAuth();
+    const { tasks, taskTypes, imputations, weekLocks, restoreData } = useData();
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        title: '',
+        content: '',
+        onConfirm: null,
+        isAlert: false
+    });
+
+    const closeDialog = () => setConfirmDialog({ ...confirmDialog, open: false });
+
+    const showAlert = (msg) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Aviso',
+            content: msg,
+            isAlert: true,
+            onConfirm: closeDialog
+        });
+    };
+
+    const showConfirm = (msg, action) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Confirmación',
+            content: msg,
+            isAlert: false,
+            onConfirm: () => {
+                action();
+                closeDialog();
+            },
+            onCancel: closeDialog
+        });
+    };
+
+    const handleDownloadBackup = () => {
         try {
-            const res = await fetch('/api/backup');
-            if (!res.ok) throw new Error('Error al descargar backup');
-            const data = await res.json();
+            // weekLocks is { "2025-W1": true }, convert to array for backup
+            const weekLocksArray = Object.keys(weekLocks || {}).map(weekId => ({
+                id: weekId,
+                isLocked: weekLocks[weekId]
+            }));
+
+            const data = {
+                metadata: {
+                    date: new Date().toISOString(),
+                    version: '2.0',
+                    origin: 'firebase-client-export'
+                },
+                users: USERS,
+                tasks,
+                taskTypes,
+                imputations,
+                weekLocks: weekLocksArray
+            };
+
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `backup_cloud_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
         } catch (err) {
-            alert(err.message);
+            showAlert("Error generando backup: " + err.message);
         }
     };
 
@@ -31,33 +85,47 @@ function BackupTab() {
         const file = e.target.files[0];
         if (!file) return;
 
-        if (!window.confirm('⚠️ ADVERTENCIA: Esta acción BORRARÁ todos los datos actuales y los reemplazará con los del archivo. ¿Estás seguro?')) {
-            e.target.value = null;
-            return;
-        }
+        const resetInput = () => { e.target.value = null; };
 
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-            try {
-                const json = JSON.parse(ev.target.result);
-                const res = await fetch('/api/restore', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(json)
-                });
-                if (!res.ok) throw new Error('Error al restaurar');
-                alert('Restauración completada. Se recargará la página.');
-                window.location.reload();
-            } catch (err) {
-                console.error(err);
-                alert('Error al restaurar: ' + err.message);
+        showConfirm(
+            '⚠️ ADVERTENCIA: Esta acción escribirá los datos del archivo en la base de datos (Merge/Overwrite). No elimina datos existentes no presentes en el backup. ¿Estás seguro?',
+            () => {
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    try {
+                        const json = JSON.parse(ev.target.result);
+
+                        // Validate basic structure
+                        if (!json.tasks && !json.users && !json.imputations) {
+                            throw new Error("Formato de archivo no reconocido o vacío.");
+                        }
+
+                        const count = await restoreData(json);
+
+                        showAlert(`Restauración completada. Se han procesado ${count} documentos.`);
+                        // Optional: reload to refresh context if listeners don't update everything strictly (they should though)
+                        setTimeout(() => window.location.reload(), 2000);
+                    } catch (err) {
+                        console.error(err);
+                        showAlert('Error al restaurar: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
             }
-        };
-        reader.readAsText(file);
+        );
+        resetInput();
     };
 
     return (
         <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+            <ConfirmDialog
+                open={confirmDialog.open}
+                title={confirmDialog.title}
+                content={confirmDialog.content}
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={closeDialog}
+                isAlert={confirmDialog.isAlert}
+            />
             <Typography variant="h6" gutterBottom display="flex" justifyContent="center" alignItems="center" gap={1}>
                 <SettingsBackupRestore /> Copia de Seguridad y Restauración
             </Typography>
@@ -94,6 +162,39 @@ function BackupTab() {
 
 function TaskTypesTab() {
     const { taskTypes, updateTaskType, deleteTaskType } = useData();
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        title: '',
+        content: '',
+        onConfirm: null,
+        isAlert: false
+    });
+
+    const closeDialog = () => setConfirmDialog({ ...confirmDialog, open: false });
+
+    const showAlert = (msg) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Aviso',
+            content: msg,
+            isAlert: true,
+            onConfirm: closeDialog
+        });
+    };
+
+    const showConfirm = (msg, action) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Confirmación',
+            content: msg,
+            isAlert: false,
+            onConfirm: () => {
+                action();
+                closeDialog();
+            },
+            onCancel: closeDialog
+        });
+    };
 
     const handleColorChange = (id, newColor) => {
         updateTaskType(id, { color: newColor });
@@ -104,17 +205,25 @@ function TaskTypesTab() {
     };
 
     const handleDeleteType = (id) => {
-        if (window.confirm('¿Estás seguro de que quieres eliminar este tipo de tarea?')) {
+        showConfirm('¿Estás seguro de que quieres eliminar este tipo de tarea?', () => {
             try {
                 deleteTaskType(id);
             } catch (error) {
-                alert(error.message);
+                showAlert(error.message);
             }
-        }
+        });
     };
 
     return (
         <React.Fragment>
+            <ConfirmDialog
+                open={confirmDialog.open}
+                title={confirmDialog.title}
+                content={confirmDialog.content}
+                onConfirm={confirmDialog.onConfirm}
+                onCancel={closeDialog}
+                isAlert={confirmDialog.isAlert}
+            />
             <TableContainer component={Paper} variant="outlined" elevation={0}>
                 <Table size="small">
                     <TableHead sx={{ bgcolor: 'background.default' }}>
@@ -215,44 +324,122 @@ function TaskTypesTab() {
 }
 
 function UsersTab() {
-    const { USERS, addUser, toggleUserStatus, updateUser } = useAuth();
+    const { users: USERS = [], addUser, toggleUserStatus, updateUser, migrateBatch, syncFirestoreToAuth } = useAuth();
     const [newName, setNewName] = useState('');
     const [newSurname, setNewSurname] = useState('');
+    const [newEmail, setNewEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
     const [isApprover, setIsApprover] = useState(false);
+
+    // Dialog State
+    const [confirmDialog, setConfirmDialog] = useState({
+        open: false,
+        title: '',
+        content: '',
+        onConfirm: null,
+        isAlert: false
+    });
+
+    const closeDialog = () => setConfirmDialog({ ...confirmDialog, open: false });
+
+    const showAlert = (msg) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Aviso',
+            content: msg,
+            isAlert: true,
+            onConfirm: closeDialog
+        });
+    };
+
+    const showConfirm = (msg, action) => {
+        setConfirmDialog({
+            open: true,
+            title: 'Confirmación',
+            content: msg,
+            isAlert: false,
+            onConfirm: () => {
+                action();
+                closeDialog();
+            },
+            onCancel: closeDialog
+        });
+    };
+
+
+    // Migration State
+    const [migrationDomain, setMigrationDomain] = useState('gdanalistas.com');
+    const [isMigrating, setIsMigrating] = useState(false);
 
     // Edit State
     const [editUser, setEditUser] = useState(null);
     const [editName, setEditName] = useState('');
     const [editSurname, setEditSurname] = useState('');
+    const [editEmail, setEditEmail] = useState('');
     const [editPassword, setEditPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    const handleAddUser = (e) => {
+    const handleAddUser = async (e) => {
         e.preventDefault();
 
-        if (!newName.trim() || !newSurname.trim() || !newPassword.trim()) {
+        if (!newName.trim() || !newSurname.trim() || !newPassword.trim() || !newEmail.trim()) {
             return;
         }
 
         if (newPassword !== confirmNewPassword) {
-            alert('Las contraseñas no coinciden');
+            showAlert('Las contraseñas no coinciden');
             return;
         }
 
         // Password complexity check: At least 1 Uppercase and 1 Number
         if (!/(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
-            alert('La contraseña debe contener al menos una letra mayúscula y un número.');
+            showAlert('La contraseña debe contener al menos una letra mayúscula y un número.');
             return;
         }
 
-        addUser(newName, newSurname, newPassword, isApprover);
+        await addUser(newName, newSurname, newPassword, isApprover, newEmail);
         setNewName('');
         setNewSurname('');
+        setNewEmail('');
         setNewPassword('');
         setConfirmNewPassword('');
         setIsApprover(false);
+    };
+
+    const handleMigration = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const resetInput = () => { e.target.value = null; };
+
+        showConfirm(
+            `Se crearán usuarios en Firebase Auth usando el dominio @${migrationDomain} si no tienen email. ¿Continuar?`,
+            () => {
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    try {
+                        const json = JSON.parse(ev.target.result);
+                        const usersList = json.users || [];
+
+                        setIsMigrating(true);
+                        const { successCount, errors } = await migrateBatch(usersList, migrationDomain);
+                        setIsMigrating(false);
+
+                        let msg = `Migración finalizada.\nCreados/Migrados: ${successCount}`;
+                        if (errors.length > 0) msg += `\nErrores (${errors.length}):\n` + errors.join('\n');
+                        showAlert(msg);
+
+                    } catch (err) {
+                        console.error(err);
+                        showAlert('Error procesando archivo: ' + err.message);
+                        setIsMigrating(false);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        );
+        resetInput();
     };
 
     const handleToggleApprover = (userId, currentRoles) => {
@@ -265,14 +452,14 @@ function UsersTab() {
             if (user && user.active) {
                 const activeApprovers = USERS.filter(u => u.active && u.roles.includes('APPROVER')).length;
                 if (activeApprovers <= 1) {
-                    alert('No se puede quitar el rol. Debe haber al menos un Aprobador activo en el sistema.');
+                    showAlert('No se puede quitar el rol. Debe haber al menos un Aprobador activo en el sistema.');
                     return;
                 }
             }
-            // General safety: Ensure we don't remove the absolute last approver (even if everyone is inactive, though unlikely)
+            // General safety: Ensure we don't remove the absolute last approver
             const totalApprovers = USERS.filter(u => u.roles.includes('APPROVER')).length;
             if (totalApprovers <= 1) {
-                alert('Debe haber al menos un usuario con rol de Aprobador.');
+                showAlert('Debe haber al menos un usuario con rol de Aprobador.');
                 return;
             }
 
@@ -290,7 +477,7 @@ function UsersTab() {
             if (roles.includes('APPROVER')) {
                 const activeApprovers = USERS.filter(u => u.active && u.roles.includes('APPROVER')).length;
                 if (activeApprovers <= 1) {
-                    alert('No se puede desactivar. Este es el único Aprobador activo en el sistema.');
+                    showAlert('No se puede desactivar. Este es el único Aprobador activo en el sistema.');
                     return;
                 }
             }
@@ -303,6 +490,7 @@ function UsersTab() {
         const parts = user.name.split(' ');
         setEditName(parts[0] || '');
         setEditSurname(parts.slice(1).join(' ') || '');
+        setEditEmail(user.email || '');
         setEditPassword('');
         setConfirmPassword('');
     };
@@ -317,10 +505,15 @@ function UsersTab() {
             updates.name = `${editName.trim()} ${editSurname.trim()} `;
         }
 
+        // Email Update
+        if (editEmail.trim()) {
+            updates.email = editEmail.trim();
+        }
+
         // Password Update
         if (editPassword) {
             if (editPassword !== confirmPassword) {
-                alert('Las contraseñas no coinciden');
+                showAlert('Las contraseñas no coinciden');
                 return;
             }
             updates.password = editPassword;
@@ -334,9 +527,9 @@ function UsersTab() {
 
     return (
         <Grid container spacing={4}>
-            {/* Formulario Alta */}
+            {/* Formulario Alta y Migración */}
             <Grid item xs={12} md={4}>
-                <Paper variant="outlined" sx={{ p: 3 }}>
+                <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
                     <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <PersonAdd fontSize="small" /> Alta de Usuario
                     </Typography>
@@ -358,6 +551,15 @@ function UsersTab() {
                                 size="small"
                                 required
                                 fullWidth
+                            />
+                            <TextField
+                                label="Email"
+                                value={newEmail}
+                                onChange={e => setNewEmail(e.target.value)}
+                                size="small"
+                                required
+                                fullWidth
+                                type="email"
                             />
                             <TextField
                                 label="Contraseña"
@@ -391,12 +593,40 @@ function UsersTab() {
                             <Button
                                 type="submit"
                                 variant="contained"
-                                disabled={!newName || !newSurname || !newPassword || !confirmNewPassword}
+                                disabled={!newName || !newSurname || !newPassword || !confirmNewPassword || !newEmail}
                             >
                                 Crear Usuario
                             </Button>
                         </Box>
                     </form>
+                </Paper>
+
+                {/* Migration Card Removed */}
+
+                {/* Sync Auth Card */}
+                <Paper variant="outlined" sx={{ p: 3, bgcolor: '#e3f2fd', mt: 3 }}>
+                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <VpnKey fontSize="small" /> Generar Accesos
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                        Usa esto si ya tienes usuarios en la lista (Firestore) con Email, pero no tienen cuenta de acceso (Auth).
+                    </Typography>
+                    <Divider sx={{ my: 2 }} />
+                    <Button
+                        variant="contained"
+                        color="info"
+                        fullWidth
+                        onClick={() => {
+                            showConfirm("Se intentará crear cuenta de acceso para todos los usuarios ACTIVOS que tengan Email y no tengan Auth todavía. ¿Continuar?", async () => {
+                                const { successCount, errors } = await syncFirestoreToAuth();
+                                let msg = `Proceso finalizado.\nCreados: ${successCount}`;
+                                if (errors.length > 0) msg += `\nErrores/Omitidos (${errors.length}):\n` + errors.slice(0, 10).join('\n') + (errors.length > 10 ? '...' : '');
+                                showAlert(msg);
+                            });
+                        }}
+                    >
+                        Sincronizar Auth
+                    </Button>
                 </Paper>
             </Grid>
 
@@ -454,65 +684,74 @@ function UsersTab() {
             </Grid>
 
             {/* Edit User Dialog */}
-            {editUser && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
-                }}>
-                    <Paper sx={{ p: 4, minWidth: 350, maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <Typography variant="h6">Editar Usuario</Typography>
-                        <Divider />
+            {
+                editUser && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+                    }}>
+                        <Paper sx={{ p: 4, minWidth: 350, maxWidth: 400, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Typography variant="h6">Editar Usuario</Typography>
+                            <Divider />
 
-                        <Typography variant="subtitle2" color="primary">Datos Personales</Typography>
-                        <TextField
-                            label="Nombre"
-                            value={editName}
-                            onChange={e => setEditName(e.target.value)}
-                            fullWidth
-                            size="small"
-                        />
-                        <TextField
-                            label="Apellidos"
-                            value={editSurname}
-                            onChange={e => setEditSurname(e.target.value)}
-                            fullWidth
-                            size="small"
-                        />
+                            <Typography variant="subtitle2" color="primary">Datos Personales</Typography>
+                            <TextField
+                                label="Nombre"
+                                value={editName}
+                                onChange={e => setEditName(e.target.value)}
+                                fullWidth
+                                size="small"
+                            />
+                            <TextField
+                                label="Apellidos"
+                                value={editSurname}
+                                onChange={e => setEditSurname(e.target.value)}
+                                fullWidth
+                                size="small"
+                            />
+                            <TextField
+                                label="Email"
+                                value={editEmail}
+                                onChange={e => setEditEmail(e.target.value)}
+                                fullWidth
+                                size="small"
+                            />
 
-                        <Typography variant="subtitle2" color="primary" sx={{ mt: 1 }}>Cambiar Contraseña (Opcional)</Typography>
-                        <TextField
-                            label="Nueva Contraseña"
-                            type="password"
-                            value={editPassword}
-                            onChange={e => setEditPassword(e.target.value)}
-                            fullWidth
-                            size="small"
-                        />
-                        <TextField
-                            label="Confirmar Contraseña"
-                            type="password"
-                            value={confirmPassword}
-                            onChange={e => setConfirmPassword(e.target.value)}
-                            fullWidth
-                            size="small"
-                            error={!!editPassword && editPassword !== confirmPassword}
-                            helperText={!!editPassword && editPassword !== confirmPassword ? "Las contraseñas no coinciden" : ""}
-                        />
+                            <Typography variant="subtitle2" color="primary" sx={{ mt: 1 }}>Cambiar Contraseña (Opcional)</Typography>
+                            <TextField
+                                label="Nueva Contraseña"
+                                type="password"
+                                value={editPassword}
+                                onChange={e => setEditPassword(e.target.value)}
+                                fullWidth
+                                size="small"
+                            />
+                            <TextField
+                                label="Confirmar Contraseña"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={e => setConfirmPassword(e.target.value)}
+                                fullWidth
+                                size="small"
+                                error={!!editPassword && editPassword !== confirmPassword}
+                                helperText={!!editPassword && editPassword !== confirmPassword ? "Las contraseñas no coinciden" : ""}
+                            />
 
-                        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
-                            <Button onClick={() => setEditUser(null)} color="inherit">Cancelar</Button>
-                            <Button
-                                variant="contained"
-                                onClick={handleSaveEdit}
-                                disabled={!!editPassword && editPassword !== confirmPassword}
-                            >
-                                Guardar Cambios
-                            </Button>
-                        </Box>
-                    </Paper>
-                </div>
-            )}
-        </Grid>
+                            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
+                                <Button onClick={() => setEditUser(null)} color="inherit">Cancelar</Button>
+                                <Button
+                                    variant="contained"
+                                    onClick={handleSaveEdit}
+                                    disabled={!!editPassword && editPassword !== confirmPassword}
+                                >
+                                    Guardar Cambios
+                                </Button>
+                            </Box>
+                        </Paper>
+                    </div>
+                )
+            }
+        </Grid >
     );
 }
 

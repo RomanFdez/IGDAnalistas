@@ -1,41 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; // This will resolve to the active AuthContext
 import { useNavigate } from 'react-router-dom';
 import {
-    Box, Paper, Typography, MenuItem, TextField, Button, Container
+    Box, Paper, Typography, TextField, Button, Container, Alert
 } from '@mui/material';
-import { AccountCircle } from '@mui/icons-material';
 
 export default function Login() {
-    const { login, USERS } = useAuth();
+    const { login, loginWithMicrosoft, user } = useAuth();
     const navigate = useNavigate();
-    const [selectedId, setSelectedId] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (USERS && USERS.length > 0 && !selectedId) {
-            setSelectedId(USERS[0].id);
+    // Navigate once user is authenticated
+    React.useEffect(() => {
+        if (user) {
+            navigate('/');
         }
-    }, [USERS, selectedId]);
+    }, [user, navigate]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        if (!selectedId || !password) return;
+        setError('');
+        setLoading(true);
 
-        // The API/AuthContext now expects the 'username' (name property) for the API call 
-        // OR the AuthContext handles the lookup? 
-        // Let's modify handleLogin to find the user object and pass the name if needed, 
-        // OR rely on AuthContext to do the right thing. 
-        // Looking at AuthContext changes: api/login expects { username, password }.
-        // If I pass ID to AuthContext.login, it needs to be adapted.
-
-        // Let's fix this here: Get the name from the selected ID.
-        const userObj = USERS.find(u => u.id === selectedId);
-        if (userObj) {
-            const success = await login(userObj.name, password); // Pass Name as Username
-            if (success) {
-                navigate('/');
+        try {
+            // Login triggers onAuthStateChanged, which updates user, which triggers useEffect above.
+            const success = await login(email, password);
+            if (!success) {
+                setError('No se pudo iniciar sesión. Verifica tus credenciales.');
+                setLoading(false);
             }
+            // Do NOT navigate here. Wait for user state.
+        } catch (err) {
+            setError('Error al iniciar sesión: ' + err.message);
+            setLoading(false);
         }
     };
 
@@ -62,31 +62,48 @@ export default function Login() {
                 >
                     <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" component="h1" color="primary" fontWeight="bold">
-                            Imputaciones GD Analistas
+                            Imputaciones GD
                         </Typography>
                         <Typography variant="subtitle1" color="text.secondary">
-                            Imputad malditos... v1.0
+                            Acceso seguro
                         </Typography>
                     </Box>
 
+                    {error && <Alert severity="error" sx={{ width: '100%' }}>{error}</Alert>}
+
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={async () => {
+                            try {
+                                await loginWithMicrosoft();
+                            } catch (e) {
+                                setError('Error con Microsoft: ' + e.message);
+                            }
+                        }}
+                        startIcon={
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" style={{ width: 20, height: 20 }} />
+                        }
+                        sx={{ mb: 2, textTransform: 'none', fontWeight: 'bold', color: '#5e5e5e', borderColor: '#c8c8c8' }}
+                    >
+                        Iniciar sesión con Microsoft
+                    </Button>
+
+                    <Typography variant="body2" color="text.secondary" sx={{ width: '100%', textAlign: 'center', my: 2 }}>
+                        o usa tu correo
+                    </Typography>
+
                     <form onSubmit={handleLogin} style={{ width: '100%' }}>
                         <TextField
-                            select
-                            label="Selecciona Usuario"
-                            value={selectedId}
-                            onChange={(e) => setSelectedId(e.target.value)}
+                            label="Correo Electrónico"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             fullWidth
+                            required
+                            autoFocus
                             sx={{ mb: 3 }}
-                        >
-                            {USERS.map((option) => (
-                                <MenuItem key={option.id} value={option.id}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <AccountCircle color="action" />
-                                        {option.name} ({option.roles.join(', ')})
-                                    </Box>
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                        />
 
                         <TextField
                             label="Contraseña"
@@ -103,10 +120,12 @@ export default function Login() {
                             fullWidth
                             variant="contained"
                             size="large"
+                            disabled={loading}
                             sx={{ py: 1.5, fontSize: '1.1rem' }}
                         >
-                            Entrar
+                            {loading ? 'Entrando...' : 'Entrar'}
                         </Button>
+
                     </form>
                 </Paper>
             </Container>

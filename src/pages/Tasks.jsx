@@ -13,13 +13,14 @@ import {
   Add, PowerSettingsNew, PowerOff, Search, FilterList, InfoOutlined, Lock, Edit, DeleteOutline, FileDownload, FileUpload, Assessment
 } from '@mui/icons-material';
 import TaskFormDialog from '../components/TaskFormDialog';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { getYear, getMonth, getISOWeek, getISOWeekYear, setISOWeek, startOfYear, eachWeekOfInterval, endOfMonth, startOfMonth, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
 export default function Tasks() {
   const { user } = useAuth();
-  const { getAllTasks, toggleTaskStatus, imputations, taskTypes, deleteTask, addTask, updateTask } = useData();
+  const { getAllTasks, getTasksForUser, toggleTaskStatus, imputations, taskTypes, deleteTask, addTask, updateTask } = useData();
   const theme = useTheme();
 
   const [open, setOpen] = useState(false);
@@ -27,6 +28,7 @@ export default function Tasks() {
   const [editingTask, setEditingTask] = useState(null); // Task being edited
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', content: '', onConfirm: null });
 
   // Pagination State
   const [page, setPage] = useState(0);
@@ -45,8 +47,14 @@ export default function Tasks() {
 
   const [tabIndex, setTabIndex] = useState(0); // 0: Tareas, 1: Resúmenes
 
-  const allTasks = getAllTasks();
-  const myTasks = allTasks.filter(t => t.assignedUserIds?.includes(user.id));
+  // Use hardened getter that checks both ID and UID
+  const myTasks = useMemo(() => {
+    // Pass user.id if available, fallback to uid. 
+    // getTasksForUser inside context handles checks against *both* assuming one is passed.
+    // To be safest, pass user.id || user.uid.
+    if (!user) return [];
+    return getTasksForUser(user.id || user.uid);
+  }, [user, getTasksForUser]);
 
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -167,67 +175,7 @@ export default function Tasks() {
     link.click();
   };
 
-  const handleImport = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const text = e.target.result;
-        const rows = text.split('\n').slice(1);
-
-        // 1. Parse and Deduplicate
-        const uniqueTasks = new Map();
-
-        rows.forEach((row) => {
-          if (!row.trim()) return;
-          const cols = row.split(';');
-
-          if (cols.length < 2) return;
-
-          const clean = (val) => val ? val.replace(/^"|"$/g, '').replace(/""/g, '"').trim() : '';
-
-          const code = clean(cols[0]);
-          if (!code) return;
-
-          const taskData = {
-            code: code,
-            name: clean(cols[1]),
-            description: clean(cols[2]),
-            utes: Number(clean(cols[3])) || 0,
-            active: cols[4] !== 'false',
-            permanent: cols[5] === 'true',
-            hito: clean(cols[6])
-          };
-
-          // Store in Map, this ensures only the last occurrence (or first if we checked existence) is kept. 
-          // Usually last-write-wins is standard for imports unless specified otherwise.
-          // User asked "only one will be created", implies uniqueness.
-          uniqueTasks.set(code, taskData);
-        });
-
-        // 2. Process Unique Tasks
-        let count = 0;
-        for (const taskData of uniqueTasks.values()) {
-          const exists = myTasks.find(t => t.code === taskData.code);
-          if (exists) {
-            await updateTask(exists.id, taskData);
-          } else {
-            await addTask(taskData);
-          }
-          count++;
-        }
-
-        alert(`Importación completada. Procesadas ${count} tareas únicas.`);
-      } catch (error) {
-        console.error(error);
-        alert('Error al importar CSV');
-      }
-      event.target.value = null;
-    };
-    reader.readAsText(file);
-  };
 
 
   const handleChangePage = (event, newPage) => setPage(newPage);
@@ -260,10 +208,6 @@ export default function Tasks() {
         {tabIndex === 0 && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">Exportar</Button>
-            <Button startIcon={<FileUpload />} component="label" color="inherit">
-              Importar
-              <input type="file" hidden accept=".csv" onChange={handleImport} />
-            </Button>
             <Button
               variant="contained"
               startIcon={<Add />}
@@ -453,9 +397,15 @@ export default function Tasks() {
                               )}
                               <IconButton
                                 onClick={() => {
-                                  if (window.confirm('¿Estás seguro de eliminar esta tarea?')) {
-                                    deleteTask(task.id);
-                                  }
+                                  setConfirmDialog({
+                                    open: true,
+                                    title: 'Eliminar Tarea',
+                                    content: `¿Estás seguro de que quieres eliminar la tarea "${task.name}"? Esta acción no se puede deshacer.`,
+                                    onConfirm: () => {
+                                      deleteTask(task.id);
+                                      setConfirmDialog({ ...confirmDialog, open: false });
+                                    }
+                                  });
                                 }}
                                 disabled={taskImputations.length > 0}
                                 size="small"
@@ -716,6 +666,13 @@ export default function Tasks() {
           setEditingTask(null); // Clear editing state on close
         }}
         taskToEdit={editingTask}
+      />
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title={confirmDialog.title}
+        content={confirmDialog.content}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog({ ...confirmDialog, open: false })}
       />
     </Box>
   );

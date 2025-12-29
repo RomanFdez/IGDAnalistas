@@ -6,7 +6,7 @@ import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Tabs, Tab, Checkbox
 } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
-import { startOfMonth, endOfMonth, eachWeekOfInterval, getISOWeek, format } from 'date-fns';
+import { startOfMonth, endOfMonth, eachWeekOfInterval, getISOWeek, format, startOfWeek, addDays, getISOWeekYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 // Helper to get Year and Week Number from "2023-W01"
@@ -25,7 +25,7 @@ const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 
 
 function ImputationStatsTab() {
     const { imputations, taskTypes } = useData();
-    const { USERS } = useAuth();
+    const { users: USERS = [] } = useAuth();
 
     // Filter States
     const currentYear = new Date().getFullYear();
@@ -63,17 +63,37 @@ function ImputationStatsTab() {
         return imputations.filter(imp => {
             const { year, week } = parseWeekId(imp.weekId);
 
-            // Year Filter
-            if (filterYear && year !== filterYear) return false;
+            // Robust Date Calculation from ISO Year/Week
+            // Jan 4th is always in ISO Week 1 for any given year.
+            const jan4 = new Date(year, 0, 4);
+            // Get the Monday of the first ISO week of the given year.
+            const startOfISOYearWeek1 = startOfWeek(jan4, { weekStartsOn: 1 });
+            // Add (week - 1) weeks to get to the Monday of the target week.
+            const weekStart = addDays(startOfISOYearWeek1, (week - 1) * 7);
+            const weekEnd = addDays(weekStart, 4); // Friday
+
+            // Year Filter: If the week has days in the selected year
+            if (filterYear) {
+                const startYear = weekStart.getFullYear();
+                const endYear = weekEnd.getFullYear();
+                const isoYear = getISOWeekYear(weekStart);
+
+                // Include if ISO year matches OR if calendar year matches for either start or end
+                if (isoYear !== filterYear && startYear !== filterYear && endYear !== filterYear) return false;
+            }
+
+            // Month Filter
+            if (filterMonth !== 'ALL') {
+                // Check if the week overlaps with selected month in selected year
+                const monStart = startOfMonth(new Date(filterYear, filterMonth));
+                const monEnd = endOfMonth(monStart);
+
+                // Check overlap
+                if (weekStart > monEnd || weekEnd < monStart) return false;
+            }
 
             // Week Filter
             if (filterWeek !== 'ALL' && week !== filterWeek) return false;
-
-            // Month Filter (Approximate: Week N in Year Y)
-            if (filterMonth !== 'ALL') {
-                const month = getMonthFromWeek(year, week);
-                if (month !== filterMonth) return false;
-            }
 
             return true;
         });
@@ -200,6 +220,7 @@ function ImputationStatsTab() {
                                 value={filterWeek}
                                 label="Semana"
                                 onChange={(e) => setFilterWeek(e.target.value)}
+                                disabled={filterMonth === 'ALL'}
                             >
                                 <MenuItem value="ALL">Todas</MenuItem>
                                 {availableWeeks.map(w => (

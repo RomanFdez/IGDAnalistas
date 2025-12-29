@@ -206,3 +206,13 @@
 [1] 7:58:16 PM [vite] hmr update /src/pages/Dashboard.jsx
 [1] 7:59:07 PM [vite] hmr update /src/pages/Tasks.jsx
 [1] 7:59:19 PM [vite] hmr update /src/pages/Approvals.jsx
+[1] 2:13:14 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:13:26 PM [vite] hmr update /src/pages/Tasks.jsx
+[1] 2:16:58 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:17:06 PM [vite] hmr update /src/pages/Tasks.jsx
+[1] 2:17:19 PM [vite] hmr update /src/pages/Tasks.jsx
+[1] 2:47:44 PM [vite] hmr update /src/pages/Dashboard.jsx
+[1] 2:48:10 PM [vite] hmr update /src/pages/Tasks.jsx
+[1] 2:48:21 PM [vite] hmr update /src/components/TaskFormDialog.jsx
+[0] npm run start-server exited with code SIGHUP
+[1] npm run dev exited with code SIGHUP

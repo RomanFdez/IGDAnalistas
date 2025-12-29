@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import {
-    format, startOfWeek, getISOWeek, getYear, getMonth,
+    format, startOfWeek, getISOWeek, getYear, getMonth, getISOWeekYear,
     startOfMonth, endOfMonth, eachWeekOfInterval, setISOWeek, startOfYear
 } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -18,7 +18,7 @@ import {
 import * as XLSX from 'xlsx';
 
 export default function Approvals() {
-    const { user, USERS } = useAuth();
+    const { user, users: USERS = [] } = useAuth();
     const { imputations, isWeekLocked, toggleWeekLock, tasks, taskTypes, addOrUpdateImputation } = useData();
     const theme = useTheme();
 
@@ -53,8 +53,10 @@ export default function Approvals() {
 
         return eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }).map(d => {
             const w = getISOWeek(d);
+            const y = getISOWeekYear(d);
             return {
                 val: w,
+                fullId: `${y}-W${w}`,
                 label: `Semana ${w} (${format(startOfWeek(d, { weekStartsOn: 1 }), 'd MMM', { locale: es })} - ${format(addDays(startOfWeek(d, { weekStartsOn: 1 }), 4), 'd MMM', { locale: es })})`
             };
         });
@@ -79,10 +81,8 @@ export default function Approvals() {
     }, [availableWeeks, selectedWeek]);
 
 
-    const weekId = `${selectedYear}-W${selectedWeek}`; // Simple construction. 
-    // Note: Edge case around year boundaries (e.g. Week 1 of 2025 starting in Dec 2024) 
-    // is handled by ISO week year logic usually, but here we strictly compose YYYY-Www. 
-    // Our DataContext expects this format.
+    const selectedWeekObj = availableWeeks.find(w => w.val === selectedWeek);
+    const weekId = selectedWeekObj ? selectedWeekObj.fullId : `${selectedYear}-W${selectedWeek}`;
 
     const isLocked = isWeekLocked(weekId);
     const weekImputations = imputations.filter(i => i.weekId === weekId);

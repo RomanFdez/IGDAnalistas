@@ -69,8 +69,14 @@ export default function Dashboard() {
     }, [currentWeekStart]);
 
     const isLocked = isWeekLocked(weekId);
-    const myImputations = imputations.filter(i => i.userId === user.id && i.weekId === weekId);
-    const allMyImputations = useMemo(() => imputations.filter(i => i.userId === user.id), [imputations, user.id]);
+
+    // FILTERING: Match either usage of old ID or new UID
+    const myImputations = imputations.filter(i =>
+        (i.userId === user.id || i.userId === user.uid) && i.weekId === weekId
+    );
+    const allMyImputations = useMemo(() =>
+        imputations.filter(i => i.userId === user.id || i.userId === user.uid),
+        [imputations, user.id, user.uid]);
 
     // Smart Suggestions: Sort myTasks by usage frequency
     const taskUsageCount = useMemo(() => {
@@ -200,7 +206,7 @@ export default function Dashboard() {
     }, [viewMode, currentWeekStart, imputations, user.id, monthOrder, monthOrderBy, tasks, taskTypes]);
 
     const handleExport = () => {
-        const userImputations = imputations.filter(i => i.userId === user.id);
+        const userImputations = imputations.filter(i => i.userId === user.id || i.userId === user.uid);
         const headers = ['Semana', 'CodigoTarea', 'Tipo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Seguimiento'];
         const csvContent = [
             headers.join(';'),
@@ -227,109 +233,7 @@ export default function Dashboard() {
         link.click();
     };
 
-    const handleImport = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const text = e.target.result;
-                const rows = text.split('\n').slice(1);
-                let successCount = 0;
-                let errors = [];
-
-                for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i];
-                    if (!row.trim()) continue;
-                    const cols = row.split(';');
-                    const rowNum = i + 2; // +2 because skipped header (1) and 0-indexed
-
-                    if (cols.length < 3) {
-                        errors.push(`Fila ${rowNum}: Formato incorrecto, faltan columnas.`);
-                        continue;
-                    }
-
-                    const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : '';
-                    const week = clean(cols[0]);
-                    const taskCode = clean(cols[1]);
-                    const typeId = clean(cols[2]);
-
-                    if (!week || !taskCode || !typeId) {
-                        errors.push(`Fila ${rowNum}: Datos incompletos (Semana, Código o Tipo faltantes).`);
-                        continue;
-                    }
-
-                    // 1. Find Task
-                    const task = tasks.find(t => t.code === taskCode);
-                    if (!task) {
-                        errors.push(`Fila ${rowNum}: Código de tarea desconocido '${taskCode}'.`);
-                        continue;
-                    }
-
-                    // 2. Validate Lock
-                    if (isWeekLocked(week)) {
-                        errors.push(`Fila ${rowNum}: La semana ${week} está bloqueada.`);
-                        continue;
-                    }
-
-                    // 3. Construct Data
-                    const imputationData = {
-                        weekId: week,
-                        taskId: task.id,
-                        userId: user.id,
-                        type: typeId,
-                        hours: {
-                            mon: parseFloat(clean(cols[3])) || 0,
-                            tue: parseFloat(clean(cols[4])) || 0,
-                            wed: parseFloat(clean(cols[5])) || 0,
-                            thu: parseFloat(clean(cols[6])) || 0,
-                            fri: parseFloat(clean(cols[7])) || 0
-                        },
-                        seg: clean(cols[8]).toUpperCase() === 'SI' || clean(cols[8]).toUpperCase() === 'TRUE',
-                        status: 'DRAFT'
-                    };
-
-                    // 4. Upsert
-                    const existing = imputations.find(imp =>
-                        imp.userId === user.id &&
-                        imp.weekId === week &&
-                        imp.taskId === task.id &&
-                        imp.type === typeId
-                    );
-
-                    try {
-                        if (existing) {
-                            await addOrUpdateImputation({ ...imputationData, id: existing.id });
-                        } else {
-                            await addOrUpdateImputation(imputationData);
-                        }
-                        successCount++;
-                    } catch (err) {
-                        errors.push(`Fila ${rowNum}: Error al guardar - ${err.message}`);
-                    }
-                }
-
-                if (errors.length > 0) {
-                    // Generate Error Report
-                    const errorBlob = new Blob([errors.join('\n')], { type: 'text/plain' });
-                    const errorLink = document.createElement('a');
-                    errorLink.href = URL.createObjectURL(errorBlob);
-                    errorLink.download = 'errores_importacion.txt';
-                    errorLink.click();
-                    alert(`Importación parcial: ${successCount} procesados. Se descargará un reporte con ${errors.length} errores.`);
-                } else {
-                    alert(`Importación completada con éxito. ${successCount} registros procesados.`);
-                }
-
-            } catch (error) {
-                console.error(error);
-                alert('Error crítico al procesar el archivo CSV.');
-            }
-            event.target.value = null;
-        };
-        reader.readAsText(file);
-    };
 
     const handleAddRow = () => {
         if (!selectedTaskId) return;
@@ -466,10 +370,7 @@ export default function Dashboard() {
                     <Button startIcon={<FileDownload />} onClick={handleExport} color="inherit">
                         Exportar
                     </Button>
-                    <Button startIcon={<FileUpload />} component="label" color="inherit">
-                        Importar
-                        <input type="file" hidden accept=".csv" onChange={handleImport} />
-                    </Button>
+
                 </Box>
             </Box>
 

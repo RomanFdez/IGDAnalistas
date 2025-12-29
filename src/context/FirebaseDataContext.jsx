@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext'; // Updated import to point to the file we just updated
+import { useAuth } from './FirebaseAuthContext'; // Note: Must match the provider being used
 import {
     collection,
     addDoc,
@@ -9,9 +9,7 @@ import {
     deleteDoc,
     onSnapshot,
     query,
-    where,
-    writeBatch,
-    getDocs
+    where
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -151,27 +149,12 @@ export const DataProvider = ({ children }) => {
     };
 
     // Getters
-    const getTasksForUser = (targetUserId) => {
-        // We match against either the pure ID passed (likely internal ID) or the UID
-        // But the tasks.assignedUserIds might contain 'u-123' (old) OR 'firebaseuid' (new or linked).
-
-        // If we are looking for tasks for the CURRENT logged in user, we should check BOTH their old ID and their new UID.
-        let idsToCheck = [targetUserId];
-
-        if (user && (user.id === targetUserId || user.uid === targetUserId)) {
-            // It's the current user. Let's include ALL their identifiers.
-            if (user.id) idsToCheck.push(user.id);
-            if (user.uid) idsToCheck.push(user.uid);
-        }
-
-        // Deduplicate
-        idsToCheck = [...new Set(idsToCheck)];
-
-        const isCurrentUser = user && idsToCheck.includes(user.id) || idsToCheck.includes(user.uid);
+    const getTasksForUser = (userId) => {
+        const isCurrentUser = user && (user.uid === userId || user.id === userId);
         const userRoles = isCurrentUser ? (user.roles || []) : [];
 
         return tasks.filter(t => {
-            if (t.assignedUserIds?.some(assignedId => idsToCheck.includes(assignedId))) return true;
+            if (t.assignedUserIds?.includes(userId)) return true;
             if (t.isGlobal) return true;
             if (t.targetRoles && isCurrentUser) {
                 return t.targetRoles.some(role => userRoles.includes(role));
@@ -181,43 +164,6 @@ export const DataProvider = ({ children }) => {
     };
     const getAllTasks = () => tasks;
 
-    const restoreData = async (backupData) => {
-        const collections = ['users', 'tasks', 'taskTypes', 'imputations', 'weekLocks'];
-        let total = 0;
-
-        try {
-            for (const colName of collections) {
-                if (!backupData[colName] || !Array.isArray(backupData[colName])) continue;
-
-                const list = backupData[colName];
-                if (list.length === 0) continue;
-
-                // Chunking to respect batch limits
-                const chunkSize = 400;
-                for (let i = 0; i < list.length; i += chunkSize) {
-                    const chunk = list.slice(i, i + chunkSize);
-                    const batch = writeBatch(db);
-                    chunk.forEach(item => {
-                        const { id, _id, ...rest } = item; // _id from Mongo backup compatibility
-                        const docId = id || _id || rest.uid;
-                        if (!docId) return; // Should not happen in valid backup
-
-                        const ref = doc(db, colName, String(docId));
-                        // Convert dates if any? JSON dates are strings. Firestore can take ISO strings or we might need conversion.
-                        // Ideally we keep them as strings or handle conversion. Current app mostly uses ISO strings for weekId, etc.
-                        batch.set(ref, { ...rest, id: String(docId) }, { merge: true });
-                    });
-                    await batch.commit();
-                    total += chunk.length;
-                }
-            }
-            return total;
-        } catch (e) {
-            console.error("Restore Error:", e);
-            throw e;
-        }
-    };
-
     return (
         <DataContext.Provider value={{
             tasks, imputations, weekLocks, taskTypes,
@@ -226,8 +172,7 @@ export const DataProvider = ({ children }) => {
             toggleWeekLock, isWeekLocked,
             getTasksForUser, getAllTasks, deleteTask,
             updateTask,
-            updateTaskType, deleteTaskType, addTaskType,
-            restoreData
+            updateTaskType, deleteTaskType, addTaskType
         }}>
             {children}
         </DataContext.Provider>

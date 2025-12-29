@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import { DataProvider, useData } from './context/DataContext'
 import { ThemeProvider, CssBaseline, createTheme } from '@mui/material';
 import Login from './pages/Login'
+import MigrationPage from './pages/Migration'
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import Approvals from './pages/Approvals';
@@ -12,6 +13,7 @@ import Statistics from './pages/Statistics';
 import Admin from './pages/Admin';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+// Imports cleaned up
 
 const theme = createTheme({
     palette: {
@@ -46,6 +48,7 @@ function App() {
                     <Router>
                         <Routes>
                             <Route path="/login" element={<Login />} />
+                            <Route path="/migrate" element={<MigrationPage />} />
                             <Route path="/" element={<Navigate to="/dashboard" />} />
 
                             <Route path="/dashboard" element={
