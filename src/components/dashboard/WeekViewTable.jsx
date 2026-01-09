@@ -87,7 +87,7 @@ export default function WeekViewTable({
                         </TableCell>
                         {weekDays.map((d, i) => (
                             <TableCell width="8%" key={d.label} align="center" sx={{ textTransform: 'capitalize', borderLeft: i === 0 ? '1px solid #e0e0e0 !important' : 'none !important', borderRight: i === weekDays.length - 1 ? '1px solid #e0e0e0 !important' : 'none !important' }}>
-                                {d.label.split(' ')[0]}
+                                {d.label}
                             </TableCell>
                         ))}
                         <TableCell width="5%" align="right" sx={{ fontWeight: 'bold', borderLeft: '1px solid #e0e0e0', pr: 1 }}>Total</TableCell>
