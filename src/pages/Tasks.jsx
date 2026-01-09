@@ -371,18 +371,23 @@ export default function Tasks() {
                               >
                                 <InfoOutlined />
                               </IconButton>
-                              <IconButton
-                                onClick={() => {
-                                  setEditingTask(task);
-                                  setOpen(true);
-                                }}
-                                size="small"
-                                color="primary"
-                              >
-                                <Edit fontSize="small" />
-                              </IconButton>
-                              {task.permanent ? (
-                                <Tooltip title="Tarea Permanente">
+                              <Tooltip title={task.name === 'No Imputable' ? "Esta tarea no se puede editar" : "Editar tarea"}>
+                                <span>
+                                  <IconButton
+                                    onClick={() => {
+                                      setEditingTask(task);
+                                      setOpen(true);
+                                    }}
+                                    disabled={task.name === 'No Imputable'}
+                                    size="small"
+                                    color="primary"
+                                  >
+                                    <Edit fontSize="small" />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                              {task.permanent || task.name === 'No Imputable' ? (
+                                <Tooltip title={task.name === 'No Imputable' ? "Tarea bloqueada" : "Tarea Permanente"}>
                                   <IconButton size="small" disabled>
                                     <Lock fontSize="small" />
                                   </IconButton>
@@ -396,25 +401,28 @@ export default function Tasks() {
                                   {task.active ? <PowerSettingsNew /> : <PowerOff />}
                                 </IconButton>
                               )}
-                              <IconButton
-                                onClick={() => {
-                                  setConfirmDialog({
-                                    open: true,
-                                    title: 'Eliminar Tarea',
-                                    content: `¿Estás seguro de que quieres eliminar la tarea "${task.name}"? Esta acción no se puede deshacer.`,
-                                    onConfirm: () => {
-                                      deleteTask(task.id);
-                                      setConfirmDialog({ ...confirmDialog, open: false });
-                                    }
-                                  });
-                                }}
-                                disabled={taskImputations.length > 0}
-                                size="small"
-                                color="error"
-                                title={taskImputations.length > 0 ? "No se puede eliminar: tiene imputaciones" : "Eliminar tarea"}
-                              >
-                                <DeleteOutline />
-                              </IconButton>
+                              <Tooltip title={task.name === 'No Imputable' ? "No se puede eliminar esta tarea" : (taskImputations.length > 0 ? "No se puede eliminar: tiene imputaciones" : "Eliminar tarea")}>
+                                <span>
+                                  <IconButton
+                                    onClick={() => {
+                                      setConfirmDialog({
+                                        open: true,
+                                        title: 'Eliminar Tarea',
+                                        content: `¿Estás seguro de que quieres eliminar la tarea "${task.name}"? Esta acción no se puede deshacer.`,
+                                        onConfirm: () => {
+                                          deleteTask(task.id);
+                                          setConfirmDialog({ ...confirmDialog, open: false });
+                                        }
+                                      });
+                                    }}
+                                    disabled={taskImputations.length > 0 || task.name === 'No Imputable'}
+                                    size="small"
+                                    color="error"
+                                  >
+                                    <DeleteOutline />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
                             </Box>
                           </TableCell>
                         </TableRow>
