@@ -426,7 +426,7 @@ export default function Dashboard() {
                                     <MenuItem value="NEW_TASK" sx={{ color: 'primary.main', fontWeight: 'bold', borderBottom: '1px solid #eee' }}>
                                         <Add fontSize="small" sx={{ mr: 1 }} /> Nueva Tarea
                                     </MenuItem>
-                                    {myTasks.map(t => <MenuItem key={t.id} value={t.id}>{t.code === 'Estructural' ? 'Estructural' : `${t.hito || '-'} - ${t.description || t.name}`}</MenuItem>)}
+                                    {myTasks.map(t => <MenuItem key={t.id} value={t.id}>{t.code === 'Estructural' ? 'Estructural' : `${t.code} - ${t.name}`}</MenuItem>)}
                                 </Select>
                             ) : (
                                 <Typography variant="body2" color="text.disabled" sx={{ px: 2 }}>Sin tareas activas</Typography>

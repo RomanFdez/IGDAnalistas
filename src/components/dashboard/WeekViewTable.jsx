@@ -129,7 +129,7 @@ export default function WeekViewTable({
                                         <Box sx={{ minWidth: 0, flex: 1 }}>
                                             <Tooltip title={`Code: ${task?.code}`}>
                                                 <Typography variant="body2" noWrap sx={{ fontWeight: 'medium' }}>
-                                                    {task?.code === 'Estructural' ? 'Estructural' : `${task?.hito || '-'} - ${task?.description || task?.name}`}
+                                                    {task?.code === 'Estructural' ? 'Estructural' : `${task?.code} - ${task?.name}`}
                                                 </Typography>
                                             </Tooltip>
                                         </Box>
