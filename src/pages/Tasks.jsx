@@ -241,6 +241,7 @@ export default function Tasks() {
                   InputProps={{ startAdornment: <Search color="action" fontSize="small" sx={{ mr: 1 }} /> }}
                   sx={{ width: 300 }}
                   autoComplete="off"
+                  inputProps={{ 'data-1p-ignore': true }}
                 />
                 <ToggleButtonGroup
                   value={filterStatus}

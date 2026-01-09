@@ -189,7 +189,9 @@ export default function WeekViewTable({
                                                     min: 0,
                                                     max: 24,
                                                     step: 0.5,
-                                                    style: { textAlign: 'center' }
+                                                    style: { textAlign: 'center' },
+                                                    autoComplete: 'off',
+                                                    'data-1p-ignore': true
                                                 }}
                                                 value={imp.hours[dayKey] === 0 ? '' : imp.hours[dayKey]}
                                                 placeholder="-"

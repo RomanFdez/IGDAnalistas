@@ -534,7 +534,7 @@ function UsersTab() {
                         <PersonAdd fontSize="small" /> Alta de Usuario
                     </Typography>
                     <Divider sx={{ my: 2 }} />
-                    <form onSubmit={handleAddUser}>
+                    <form onSubmit={handleAddUser} autoComplete="off">
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <TextField
                                 label="Nombre"
@@ -543,6 +543,8 @@ function UsersTab() {
                                 size="small"
                                 required
                                 fullWidth
+                                autoComplete="off"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
                             <TextField
                                 label="Apellidos"
@@ -551,6 +553,8 @@ function UsersTab() {
                                 size="small"
                                 required
                                 fullWidth
+                                autoComplete="off"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
                             <TextField
                                 label="Email"
@@ -560,6 +564,8 @@ function UsersTab() {
                                 required
                                 fullWidth
                                 type="email"
+                                autoComplete="off"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
                             <TextField
                                 label="Contraseña"
@@ -569,6 +575,8 @@ function UsersTab() {
                                 required
                                 fullWidth
                                 type="password"
+                                autoComplete="new-password"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
                             <TextField
                                 label="Confirmar Contraseña"
@@ -578,8 +586,10 @@ function UsersTab() {
                                 required
                                 fullWidth
                                 type="password"
+                                autoComplete="new-password"
                                 error={!!newPassword && !!confirmNewPassword && newPassword !== confirmNewPassword}
                                 helperText={!!newPassword && !!confirmNewPassword && newPassword !== confirmNewPassword ? 'Las contraseñas no coinciden' : ''}
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
                             <FormControlLabel
                                 control={
@@ -701,6 +711,8 @@ function UsersTab() {
                                 onChange={e => setEditName(e.target.value)}
                                 fullWidth
                                 size="small"
+                                autoComplete="off"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
                             <TextField
                                 label="Apellidos"
@@ -708,6 +720,8 @@ function UsersTab() {
                                 onChange={e => setEditSurname(e.target.value)}
                                 fullWidth
                                 size="small"
+                                autoComplete="off"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
                             <TextField
                                 label="Email"
@@ -715,6 +729,8 @@ function UsersTab() {
                                 onChange={e => setEditEmail(e.target.value)}
                                 fullWidth
                                 size="small"
+                                autoComplete="off"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
 
                             <Typography variant="subtitle2" color="primary" sx={{ mt: 1 }}>Cambiar Contraseña (Opcional)</Typography>
@@ -725,6 +741,8 @@ function UsersTab() {
                                 onChange={e => setEditPassword(e.target.value)}
                                 fullWidth
                                 size="small"
+                                autoComplete="new-password"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
                             <TextField
                                 label="Confirmar Contraseña"
@@ -735,6 +753,8 @@ function UsersTab() {
                                 size="small"
                                 error={!!editPassword && editPassword !== confirmPassword}
                                 helperText={!!editPassword && editPassword !== confirmPassword ? "Las contraseñas no coinciden" : ""}
+                                autoComplete="new-password"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
 
                             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>

@@ -483,6 +483,7 @@ export default function Dashboard() {
                                 InputProps={{ startAdornment: <Search color="action" fontSize="small" sx={{ mr: 1 }} /> }}
                                 sx={{ maxWidth: 300 }}
                                 autoComplete="off"
+                                inputProps={{ 'data-1p-ignore': true }}
                             />
                         </Box>
                     )}

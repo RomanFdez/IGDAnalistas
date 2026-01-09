@@ -291,6 +291,8 @@ export default function Approvals() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 InputProps={{ startAdornment: <Search sx={{ color: 'text.secondary', mr: 1 }} /> }}
                                 variant="outlined"
+                                autoComplete="off"
+                                inputProps={{ 'data-1p-ignore': true }}
                                 sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'background.default' } }}
                             />
                         </CardContent>

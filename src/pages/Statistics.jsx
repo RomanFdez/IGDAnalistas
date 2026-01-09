@@ -29,6 +29,8 @@ function ImputationStatsTab() {
 
     // Filter States
     const currentYear = new Date().getFullYear();
+
+    const years = Array.from({ length: currentYear - 2023 + 1 }, (_, i) => 2023 + i);
     const [filterYear, setFilterYear] = useState(currentYear);
     const [filterMonth, setFilterMonth] = useState('ALL');
     const [filterWeek, setFilterWeek] = useState('ALL');
@@ -192,9 +194,9 @@ function ImputationStatsTab() {
                                 label="Año"
                                 onChange={(e) => setFilterYear(e.target.value)}
                             >
-                                <MenuItem value={2023}>2023</MenuItem>
-                                <MenuItem value={2024}>2024</MenuItem>
-                                <MenuItem value={2025}>2025</MenuItem>
+                                {years.map((y) => (
+                                    <MenuItem key={y} value={y}>{y}</MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Grid>
@@ -303,7 +305,10 @@ function ImputationStatsTab() {
 function MonthlyStatsTab() {
     const { imputations, taskTypes } = useData();
     const currentYear = new Date().getFullYear();
+
+    const years = Array.from({ length: currentYear - 2023 + 1 }, (_, i) => 2023 + i);
     const [year, setYear] = useState(currentYear);
+
     const [disabledTypes, setDisabledTypes] = useState([]); // Array of IDs to exclude
     const [segFilter, setSegFilter] = useState('ALL'); // 'ALL', 'SEG', 'NO_SEG'
 
@@ -439,9 +444,9 @@ function MonthlyStatsTab() {
                         <FormControl fullWidth size="small">
                             <InputLabel>Año</InputLabel>
                             <Select value={year} label="Año" onChange={(e) => setYear(e.target.value)}>
-                                <MenuItem value={2023}>2023</MenuItem>
-                                <MenuItem value={2024}>2024</MenuItem>
-                                <MenuItem value={2025}>2025</MenuItem>
+                                {years.map((y) => (
+                                    <MenuItem key={y} value={y}>{y}</MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Grid>

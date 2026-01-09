@@ -118,6 +118,7 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
                             error={hitoError}
                             helperText={hitoError ? "El Hito es requerido para generar el código" : "Ej: Fase1 (Generará Fase1-1, Fase1-2...)"}
                             placeholder="Ej: Entrega Fase 1"
+                            inputProps={{ 'data-1p-ignore': true }}
                         />
                         <TextField
                             autoFocus={!!taskToEdit}
@@ -130,6 +131,7 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
                             required
                             error={nameError}
                             helperText={nameError ? "El nombre es requerido" : ""}
+                            inputProps={{ 'data-1p-ignore': true }}
                         />
                         <TextField
                             label="Descripción"
@@ -138,6 +140,7 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
                             multiline
                             rows={3}
                             fullWidth
+                            inputProps={{ 'data-1p-ignore': true }}
                         />
                         <TextField
                             label="Número de UTES (Horas Presupuestadas)"
@@ -145,7 +148,7 @@ export default function TaskFormDialog({ open, onClose, onTaskCreated, taskToEdi
                             value={newUtes}
                             onChange={(e) => setNewUtes(e.target.value)}
                             fullWidth
-                            InputProps={{ inputProps: { min: 0 } }}
+                            InputProps={{ inputProps: { min: 0, 'data-1p-ignore': true } }}
                             helperText="Opcional. Bolsa de horas total para la tarea."
                         />
                     </Box>
