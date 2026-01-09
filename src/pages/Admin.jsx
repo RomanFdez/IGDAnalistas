@@ -867,13 +867,13 @@ export default function Admin() {
                 <Tabs value={tabIndex} onChange={handleTabChange}>
                     <Tab label="Tipos de Tarea" />
                     <Tab label="Usuarios" />
-                    <Tab label="Backup" />
+                    {/* <Tab label="Backup" /> */}
                 </Tabs>
             </Box>
 
             {tabIndex === 0 && <TaskTypesTab />}
             {tabIndex === 1 && <UsersTab />}
-            {tabIndex === 2 && <BackupTab />}
+            {/* {tabIndex === 2 && <BackupTab />} */}
 
             {/* Dialog for Add Type */}
             <Dialog open={openAdd} onClose={() => setOpenAdd(false)}>
